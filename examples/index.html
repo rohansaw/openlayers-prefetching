@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenLayers Prefetching - Examples</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    .examples {
+      margin-top: 30px;
+    }
+    .example-card {
+      background: #f9f9f9;
+      border-left: 4px solid #4CAF50;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    .example-card h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .example-card p {
+      color: #666;
+      margin: 10px 0;
+    }
+    .example-card a {
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .example-card a:hover {
+      background: #45a049;
+    }
+    .note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .note strong {
+      color: #856404;
+    }
+    code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>OpenLayers Prefetching Examples</h1>
+  
+  <p>
+    Welcome to the OpenLayers Prefetching extension examples. These demonstrations show how to integrate
+    and use the PrefetchManager with your OpenLayers maps.
+  </p>
+
+  <div class="note">
+    <strong>Note:</strong> The examples currently use placeholder implementations.
+    After implementing the actual logic in <code>src/PrefetchManager.js</code>, run <code>npm run build</code>
+    and update the examples to import from the built module.
+  </div>
+
+  <div class="examples">
+    <div class="example-card">
+      <h2>Basic Example</h2>
+      <p>
+        A simple demonstration showing the basic setup and controls for the PrefetchManager.
+        Features include:
+      </p>
+      <ul>
+        <li>Enable/disable prefetching</li>
+        <li>Adjust prefetch distance with a slider</li>
+        <li>Control maximum concurrent requests</li>
+        <li>Manual prefetch triggering</li>
+        <li>Queue management</li>
+      </ul>
+      <a href="basic.html">View Basic Example</a>
+    </div>
+
+    <div class="example-card">
+      <h2>Advanced Example</h2>
+      <p>
+        An advanced implementation demonstrating more sophisticated features:
+      </p>
+      <ul>
+        <li>Real-time statistics tracking</li>
+        <li>Performance monitoring</li>
+        <li>Aggressive prefetch settings</li>
+        <li>Dynamic updates during map interaction</li>
+      </ul>
+      <a href="advanced.html">View Advanced Example</a>
+    </div>
+  </div>
+
+  <h2>Quick Start</h2>
+  <p>To get started with your own implementation:</p>
+  <ol>
+    <li>Implement the core logic in <code>src/PrefetchManager.js</code></li>
+    <li>Build the library with <code>npm run build</code></li>
+    <li>Import and use in your project:
+      <pre><code>import PrefetchManager from 'openlayers-prefetching';
+
+const prefetchManager = new PrefetchManager({
+  map: yourMap,
+  prefetchDistance: 1,
+  maxConcurrent: 4
+});</code></pre>
+    </li>
+  </ol>
+
+  <h2>Documentation</h2>
+  <p>
+    For full API documentation and installation instructions, see the
+    <a href="../README.md">README.md</a> in the root directory.
+  </p>
+</body>
+</html>
