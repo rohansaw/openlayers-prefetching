@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Prefetching Manager for OpenLayers - An extension to optimize tile loading",
   "main": "dist/PrefetchManager.js",
-  "module": "src/PrefetchManager.js",
+  "module": "dist/PrefetchManager.esm.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
