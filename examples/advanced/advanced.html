@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinel-2 Multi-Map Prefetch Demo</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.0.0/ol.css">
+  <link rel="stylesheet" href="./advanced.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "ol/": "https://cdn.jsdelivr.net/npm/ol@8.0.0/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div id="maps-area">
+      <div id="main-map-container">
+        <div id="main-map" class="map-view"></div>
+        <div class="map-label" id="main-map-label">Main - register mosaics</div>
+      </div>
+      <div id="preview-row"></div>
+    </div>
+
+    <div id="controls">
+      <h2>Microsoft Planetary Computer Prefetched Map</h2>
+
+      <div class="section">
+        <div id="status-panel">
+          <div class="stat-row">
+            <span class="stat-label">Status:</span>
+            <span id="stat-paused" class="stat-value status-active">Active</span>
+          </div>
+          <div class="stat-row totals-row">
+            <span class="stat-label">Total:</span>
+            <span id="stat-totals" class="stat-value">Q:0 L:0 Loaded:0 Errors:0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Per-Category Breakdown</h3>
+        <table class="category-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th title="Priority">P</th>
+              <th title="Queued">Q</th>
+              <th title="Loading">L</th>
+              <th title="Loaded">Loaded</th>
+              <th title="Errors">Errors</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cat-name">Spatial (active layer)</td>
+              <td id="cat-spatial-p" class="cat-num cat-prio-badge">1</td>
+              <td id="cat-spatial-q" class="cat-num">0</td>
+              <td id="cat-spatial-l" class="cat-num">0</td>
+              <td id="cat-spatial-d" class="cat-num">0</td>
+              <td id="cat-spatial-e" class="cat-num cat-err">0</td>
+            </tr>
+            <tr>
+              <td class="cat-name">BG layers (viewport)</td>
+              <td id="cat-bgvp-p" class="cat-num cat-prio-badge">2</td>
+              <td id="cat-bgvp-q" class="cat-num">0</td>
+              <td id="cat-bgvp-l" class="cat-num">0</td>
+              <td id="cat-bgvp-d" class="cat-num">0</td>
+              <td id="cat-bgvp-e" class="cat-num cat-err">0</td>
+            </tr>
+            <tr>
+              <td class="cat-name">Next nav (active)</td>
+              <td id="cat-navact-p" class="cat-num cat-prio-badge">4</td>
+              <td id="cat-navact-q" class="cat-num">0</td>
+              <td id="cat-navact-l" class="cat-num">0</td>
+              <td id="cat-navact-d" class="cat-num">0</td>
+              <td id="cat-navact-e" class="cat-num cat-err">0</td>
+            </tr>
+            <tr>
+              <td class="cat-name">Next nav (BG layers)</td>
+              <td id="cat-navbg-p" class="cat-num cat-prio-badge">5</td>
+              <td id="cat-navbg-q" class="cat-num">0</td>
+              <td id="cat-navbg-l" class="cat-num">0</td>
+              <td id="cat-navbg-d" class="cat-num">0</td>
+              <td id="cat-navbg-e" class="cat-num cat-err">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section">
+        <h3>Errors <span id="error-badge" class="error-badge" style="display:none">0</span></h3>
+        <div id="error-list" class="error-list"></div>
+      </div>
+
+      <div class="section">
+        <h3>Activity Log</h3>
+        <div id="log"></div>
+      </div>
+
+      <div class="section">
+        <h3>Anticipated Navigation</h3>
+        <p class="hint">Next target is preloaded from a shuffled list of European capitals.</p>
+        <div class="next-target-box" id="next-capital-box">
+          <span id="next-capital-name">-</span>
+        </div>
+        <button id="go-to-target" class="action-btn" disabled>Navigate to Next Capital</button>
+      </div>
+
+      <div class="section">
+        <h3>Layer Switcher</h3>
+        <p class="hint">Click a layer button or a preview map to switch the main map.</p>
+        <div id="layer-buttons"></div>
+      </div>
+
+      <div class="section">
+        <h3>Prefetch Control</h3>
+        <label class="toggle">
+          <input type="checkbox" id="prefetch-toggle" checked>
+          <span>Enable Prefetching</span>
+        </label>
+        <label>
+          Spatial Buffer Factor:
+          <input type="range" id="buffer-factor" min="1" max="3" step="0.1" value="1.5">
+          <span id="buffer-factor-value">1.5x</span>
+        </label>
+        <label>
+          Max Concurrent:
+          <input type="range" id="max-concurrent" min="1" max="16" step="1" value="12">
+          <span id="max-concurrent-value">12</span>
+        </label>
+      </div>
+
+      <div class="section">
+        <h3>Category Priorities</h3>
+        <p class="hint">Lower number = loaded first. Reorder what matters most to you.</p>
+        <div class="cat-prio-grid">
+          <label class="cat-prio-row">
+            <span class="cat-prio-label">Spatial (active layer)</span>
+            <input type="number" id="prio-spatial" class="cat-prio-input" value="1" min="1" max="99" step="1">
+          </label>
+          <label class="cat-prio-row">
+            <span class="cat-prio-label">BG layers (viewport)</span>
+            <input type="number" id="prio-bg-viewport" class="cat-prio-input" value="2" min="1" max="99" step="1">
+          </label>
+          <label class="cat-prio-row">
+            <span class="cat-prio-label">Next nav (active)</span>
+            <input type="number" id="prio-nav-current" class="cat-prio-input" value="4" min="1" max="99" step="1">
+          </label>
+          <label class="cat-prio-row">
+            <span class="cat-prio-label">Next nav (BG layers)</span>
+            <input type="number" id="prio-nav-bg" class="cat-prio-input" value="5" min="1" max="99" step="1">
+          </label>
+        </div>
+        <button id="apply-priorities-btn" class="action-btn secondary" style="margin-top:6px;width:100%;">Apply Priorities</button>
+      </div>
+
+      <div class="section">
+        <h3>Date Ranges</h3>
+        <p class="hint">Each range registers a mosaic with Planetary Computer. The active range is visible on the main map; each preview shows one range.</p>
+        <div id="date-ranges"></div>
+        <div style="display:flex;gap:4px;margin-top:8px;">
+          <button id="add-range-btn" class="action-btn secondary" style="flex:1;">+ Add Range</button>
+          <button id="register-btn" class="action-btn" style="flex:1;">Register Mosaics</button>
+        </div>
+        <div id="registration-status" class="reg-status" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./advanced.js"></script>
+</body>
+</html>

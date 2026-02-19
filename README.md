@@ -4,7 +4,16 @@ Prefetching Manager for OpenLayers - An extension to optimize tile loading and i
 
 ## Overview
 
-This extension provides intelligent tile prefetching for OpenLayers maps, loading tiles around the current viewport before they're needed. This results in smoother panning and zooming experiences for users.
+This extension provides customizable prefetching of tiles. Multiple common prefecthing scenarios are covered:
+
+- Spatial: Prefetch tiles outside of current viewport
+- Layers: Prefetch layers that are not yet visible with the same viewport as from the current active layer
+- Next-Location: Sometimes the locations where to navigate to next are already known. We can preload tiles for these.
+
+We allow assigning priorities on what to prefetch first:
+
+- Spatial/Background/Next/NextBackground
+- Per Layer priorities: Some layers might typically be neded before others, so priorities per layer allow customizing this.
 
 ## Installation
 
@@ -18,97 +27,28 @@ Or with yarn:
 yarn add openlayers-prefetching
 ```
 
-## Quick Start
-
-```javascript
-import Map from 'ol/Map';
-import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
-import PrefetchManager from 'openlayers-prefetching';
-
-// Create your OpenLayers map
-const map = new Map({
-  target: 'map',
-  layers: [
-    new TileLayer({
-      source: new OSM()
-    })
-  ],
-  view: new View({
-    center: [0, 0],
-    zoom: 2
-  })
-});
-
-// Initialize the PrefetchManager
-const prefetchManager = new PrefetchManager({
-  map: map,
-  prefetchDistance: 1,  // Number of tiles to prefetch around viewport
-  maxConcurrent: 4,     // Maximum concurrent tile requests
-  enabled: true         // Enable prefetching immediately
-});
-```
-
-## API
-
-### Constructor Options
-
-- `map` (required): The OpenLayers map instance
-- `prefetchDistance` (default: 1): Number of tiles to prefetch around the viewport
-- `maxConcurrent` (default: 4): Maximum number of concurrent tile requests
-- `enabled` (default: true): Whether prefetching is enabled on initialization
-
-### Methods
-
-- `enable()`: Enable tile prefetching
-- `disable()`: Disable tile prefetching
-- `setPrefetchDistance(distance)`: Set the prefetch distance
-- `getPrefetchDistance()`: Get the current prefetch distance
-- `setMaxConcurrent(max)`: Set the maximum concurrent requests
-- `getMaxConcurrent()`: Get the maximum concurrent requests
-- `prefetch()`: Manually trigger prefetching for the current viewport
-- `clearQueue()`: Clear the prefetch queue
-- `dispose()`: Clean up and remove all event listeners
-
 ## Examples
 
 See the [examples](./examples) directory for complete working examples:
 
-- **basic.html**: Simple integration with controls
-- **advanced.html**: Advanced usage with statistics
+Disclaimer: The examples were mostly generated with GPT5.2-Codex.
+
+We provide an example that allows a user to visualize Timeseries of Sentinel-2 Imagery over Europe from
+[Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
+The timeseries of imagery is preloaded before the user navigates to the corresponding layers.
+
 
 To run the examples locally:
 
 ```bash
-npm run serve
+npm run build && npm run serve
 ```
 
-Then open http://localhost:8080/basic.html in your browser.
+Then open http://localhost:8080/examples in your browser.
 
-## Development
+## Compatibility
 
-### Building
-
-```bash
-npm run build
-```
-
-This will create:
-- `dist/PrefetchManager.js` - UMD build
-- `dist/PrefetchManager.esm.js` - ES module build
-
-### Development Mode
-
-```bash
-npm run dev
-```
-
-Runs the build in watch mode for development.
-
-## Browser Compatibility
-
-This extension works with OpenLayers 7.x and 8.x.
+This extension was only tested with Openlayers 8.0. It may or may not be compatible with other versions.
 
 ## License
 
