@@ -5,10 +5,26 @@
   "main": "dist/PrefetchManager.js",
   "module": "dist/PrefetchManager.esm.js",
   "types": "dist/types/PrefetchManager.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/PrefetchManager.d.ts",
+      "import": "./dist/PrefetchManager.esm.js",
+      "require": "./dist/PrefetchManager.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "build": "rollup -c rollup.config.js",
+    "dev": "rollup -c rollup.config.js -w",
+    "prepublishOnly": "npm run build",
     "serve": "npx http-server . -p 8080"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "openlayers",
@@ -24,12 +40,15 @@
     "ol": "^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-typescript": "^11.1.6",
     "ol": "^8.0.0",
     "rollup": "^3.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^25.0.0",
-    "@rollup/plugin-typescript": "^11.1.6",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "openlayers-prefetching": "^0.1.0"
   }
 }

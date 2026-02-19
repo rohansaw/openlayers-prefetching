@@ -21,12 +21,6 @@ We allow assigning priorities on what to prefetch first:
 npm install openlayers-prefetching
 ```
 
-Or with yarn:
-
-```bash
-yarn add openlayers-prefetching
-```
-
 ## Examples
 
 See the [examples](./examples) directory for complete working examples:

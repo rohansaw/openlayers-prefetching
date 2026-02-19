@@ -4,7 +4,7 @@ import TileLayer from 'ol/layer/Tile.js';
 import XYZ from 'ol/source/XYZ.js';
 import OSM from 'ol/source/OSM.js';
 import {fromLonLat} from 'ol/proj.js';
-import PrefetchManager, {PrefetchCategory} from '../../dist/PrefetchManager.esm.js';
+import PrefetchManager, {PrefetchCategory} from 'openlayers-prefetching';
 
 
 const REGISTER_URL =
