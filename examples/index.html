@@ -73,64 +73,32 @@
     and use the PrefetchManager with your OpenLayers maps.
   </p>
 
-  <div class="note">
-    <strong>Note:</strong> The examples currently use placeholder implementations.
-    After implementing the actual logic in <code>src/PrefetchManager.js</code>, run <code>npm run build</code>
-    and update the examples to import from the built module.
-  </div>
-
   <div class="examples">
+        <div class="example-card">
+      <h2>Advanced Example</h2>
+      <p>
+        Understand how the prefetching system works under the hood with a more complex example. This demo includes:
+      </p>
+      <ul>
+        <li>Live Insights into what is being currently prefetched and it's status</li>
+        <li>Multiple synced maps on the same page</li>
+        <li>Customizable number of workers / spatial buffer</li>
+        <li>Timeseries imagery from Microsoft Planetary Computer</li>
+        <li>Customizable priorities</li>
+      </ul>
+      <a href="advanced/advanced.html">View Advanced Example</a>
+    </div>
     <div class="example-card">
       <h2>Basic Example</h2>
       <p>
-        A simple demonstration showing the basic setup and controls for the PrefetchManager.
-        Features include:
-      </p>
+        A simple demonstration showing how the prefetch manager is used in simple projects.
+        Check the Advanced example for now
       <ul>
-        <li>Enable/disable prefetching</li>
-        <li>Adjust prefetch distance with a slider</li>
-        <li>Control maximum concurrent requests</li>
-        <li>Manual prefetch triggering</li>
-        <li>Queue management</li>
       </ul>
-      <a href="basic.html">View Basic Example</a>
+  <a href="basic/basic.html">TODO</a>
     </div>
 
-    <div class="example-card">
-      <h2>Advanced Example</h2>
-      <p>
-        An advanced implementation demonstrating more sophisticated features:
-      </p>
-      <ul>
-        <li>Real-time statistics tracking</li>
-        <li>Performance monitoring</li>
-        <li>Aggressive prefetch settings</li>
-        <li>Dynamic updates during map interaction</li>
-      </ul>
-      <a href="advanced.html">View Advanced Example</a>
-    </div>
+
   </div>
-
-  <h2>Quick Start</h2>
-  <p>To get started with your own implementation:</p>
-  <ol>
-    <li>Implement the core logic in <code>src/PrefetchManager.js</code></li>
-    <li>Build the library with <code>npm run build</code></li>
-    <li>Import and use in your project:
-      <pre><code>import PrefetchManager from 'openlayers-prefetching';
-
-const prefetchManager = new PrefetchManager({
-  map: yourMap,
-  prefetchDistance: 1,
-  maxConcurrent: 4
-});</code></pre>
-    </li>
-  </ol>
-
-  <h2>Documentation</h2>
-  <p>
-    For full API documentation and installation instructions, see the
-    <a href="../README.md">README.md</a> in the root directory.
-  </p>
 </body>
 </html>

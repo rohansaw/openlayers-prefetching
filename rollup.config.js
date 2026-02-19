@@ -1,8 +1,9 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 
 export default {
-  input: 'src/PrefetchManager.js',
+  input: 'src/PrefetchManager.ts',
   output: [
     {
       file: 'dist/PrefetchManager.js',
@@ -16,9 +17,10 @@ export default {
       sourcemap: true
     }
   ],
-  external: ['ol', 'ol/Map', 'ol/layer/Tile', 'ol/source/OSM'],
+  external: (id) => id === 'ol' || id.startsWith('ol/'),
   plugins: [
     resolve(),
-    commonjs()
+    commonjs(),
+    typescript({tsconfig: './tsconfig.json'})
   ]
 };

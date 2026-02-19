@@ -4,10 +4,11 @@
   "description": "Prefetching Manager for OpenLayers - An extension to optimize tile loading",
   "main": "dist/PrefetchManager.js",
   "module": "dist/PrefetchManager.esm.js",
+  "types": "dist/types/PrefetchManager.d.ts",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "serve": "npx http-server examples -p 8080"
+  "serve": "npx http-server . -p 8080"
   },
   "keywords": [
     "openlayers",
@@ -26,6 +27,9 @@
     "ol": "^8.0.0",
     "rollup": "^3.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^25.0.0"
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
   }
 }
