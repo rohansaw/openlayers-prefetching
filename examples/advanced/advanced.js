@@ -662,12 +662,14 @@ function updateStatsUI(stats) {
   // Next target info
   const targetBox = document.getElementById('next-target-info');
   const targetDetail = document.getElementById('next-target-detail');
-  if (stats.nextTarget) {
-    targetBox.style.display = 'block';
-    const c = stats.nextTarget.center;
-    targetDetail.textContent = `zoom ${stats.nextTarget.zoom} @ [${c[0].toFixed(0)}, ${c[1].toFixed(0)}]`;
-  } else {
-    targetBox.style.display = 'none';
+  if (targetBox && targetDetail) {
+    if (stats.nextTarget) {
+      targetBox.style.display = 'block';
+      const c = stats.nextTarget.center;
+      targetDetail.textContent = `zoom ${stats.nextTarget.zoom} @ [${c[0].toFixed(0)}, ${c[1].toFixed(0)}]`;
+    } else {
+      targetBox.style.display = 'none';
+    }
   }
 
   // Error details
@@ -680,6 +682,9 @@ function updateStatsUI(stats) {
 function renderErrors(recentErrors, totalErrors) {
   const badge = document.getElementById('error-badge');
   const list = document.getElementById('error-list');
+  if (!badge || !list) {
+    return;
+  }
 
   if (totalErrors === 0) {
     badge.style.display = 'none';
@@ -729,7 +734,6 @@ function renderDateRanges() {
       <input type="date" class="dr-end" value="${dr.end}">
       <span class="range-status ${dr.searchId ? 'ok' : dr.error ? 'err' : ''}"
             title="${dr.searchId || dr.error || ''}">
-  ${dr.searchId ? 'ok ' + dr.searchId.slice(0, 8) : dr.error ? 'err' : '-'}
       </span>
   <button class="remove-btn" title="Remove">x</button>
     `;
