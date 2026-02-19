@@ -23,15 +23,16 @@ npm install openlayers-prefetching
 
 ## Examples
 
+**Hosted Demo**
+https://rohansaw.github.io/openlayers-prefetching/examples/advanced/advanced.html
+
+
+**Try it locally**
 See the [examples](./examples) directory for complete working examples:
 
 We provide an example that allows a user to visualize Timeseries of Sentinel-2 Imagery over Europe from
 [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
 The timeseries of imagery is preloaded before the user navigates to the corresponding layers.
-
-Hosted advanced demo:
-https://rohansaw.github.io/openlayers-prefetching/examples/advanced/advanced.html
-
 
 To run the examples locally:
 
