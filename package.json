@@ -1,0 +1,31 @@
+{
+  "name": "openlayers-prefetching",
+  "version": "0.1.0",
+  "description": "Prefetching Manager for OpenLayers - An extension to optimize tile loading",
+  "main": "dist/PrefetchManager.js",
+  "module": "src/PrefetchManager.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "serve": "npx http-server examples -p 8080"
+  },
+  "keywords": [
+    "openlayers",
+    "prefetch",
+    "tiles",
+    "map",
+    "performance",
+    "extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "ol": "^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "ol": "^8.0.0",
+    "rollup": "^3.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0"
+  }
+}
