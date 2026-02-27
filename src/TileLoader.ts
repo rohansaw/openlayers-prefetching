@@ -2,11 +2,11 @@
  * @module ol/prefetch/TileLoader
  */
 import TileState from 'ol/TileState.js';
-import {getCategoryName} from './PrefetchConstants';
-import type {Listener} from 'ol/events.js';
+import { getCategoryName } from './PrefetchConstants';
+import type { Listener } from 'ol/events.js';
 import type OLMap from 'ol/Map.js';
 import type Tile from 'ol/Tile.js';
-import type {PrefetchError, PrefetchTask} from './PrefetchTypes';
+import type { PrefetchError, PrefetchTask } from './PrefetchTypes';
 import type PrefetchStats from './PrefetchStats';
 
 export interface TileLoaderCallbacks {
@@ -21,7 +21,7 @@ export interface TileLoaderCallbacks {
  */
 class TileLoader {
   private callbacks_: TileLoaderCallbacks;
-  private loading_: Map<string, {task: PrefetchTask; unlisten: () => void}> = new Map();
+  private loading_: Map<string, { task: PrefetchTask; unlisten: () => void }> = new Map();
 
   constructor(callbacks: TileLoaderCallbacks) {
     this.callbacks_ = callbacks;
@@ -39,7 +39,7 @@ class TileLoader {
 
     const projection = map.getView().getProjection();
     const pixelRatio =
-      (map as unknown as {getPixelRatio?: () => number}).getPixelRatio?.() ?? 1;
+      (map as unknown as { getPixelRatio?: () => number }).getPixelRatio?.() ?? 1;
     const category = task.category;
 
     let tile: Tile | null;
@@ -70,17 +70,19 @@ class TileLoader {
       return;
     }
 
-    this.loading_.set(task.id, {task, unlisten: () => {}});
+    this.loading_.set(task.id, { task, unlisten: () => {} });
     stats.recordLoadingStart(category);
 
     const taskId = task.id;
     const layerName = task.layer.get('name') || task.layer.get('label') || 'unknown';
-    (tile as unknown as {__prefetchCategory?: string; __prefetchLayer?: string})
-      .__prefetchCategory = task.category;
-    (tile as unknown as {__prefetchCategory?: string; __prefetchLayer?: string})
-      .__prefetchLayer = layerName;
+    (
+      tile as unknown as { __prefetchCategory?: string; __prefetchLayer?: string }
+    ).__prefetchCategory = task.category;
+    (
+      tile as unknown as { __prefetchCategory?: string; __prefetchLayer?: string }
+    ).__prefetchLayer = layerName;
 
-  const onTileChange: Listener = () => {
+    const onTileChange: Listener = () => {
       const newState = tile.getState();
       if (
         newState !== TileState.LOADED &&
@@ -90,7 +92,7 @@ class TileLoader {
         return;
       }
 
-  tile.removeEventListener('change', onTileChange);
+      tile.removeEventListener('change', onTileChange);
 
       if (!this.loading_.has(taskId)) {
         return;
@@ -113,10 +115,10 @@ class TileLoader {
 
     this.loading_.set(taskId, {
       task,
-  unlisten: () => tile.removeEventListener('change', onTileChange),
+      unlisten: () => tile.removeEventListener('change', onTileChange),
     });
 
-  tile.addEventListener('change', onTileChange);
+    tile.addEventListener('change', onTileChange);
     tile.load();
   }
 
@@ -132,7 +134,10 @@ class TileLoader {
    * Abandon all in-flight tasks except those belonging to the given layer.
    * Used to keep active-layer spatial loads running during user interaction.
    */
-  abandonNonActive(activeLayer: import('ol/layer/BaseTile.js').default<any, any> | null, stats: PrefetchStats): void {
+  abandonNonActive(
+    activeLayer: import('ol/layer/BaseTile.js').default<any, any> | null,
+    stats: PrefetchStats,
+  ): void {
     for (const [id, entry] of this.loading_) {
       if (activeLayer && entry.task.layer === activeLayer) {
         continue;
@@ -146,10 +151,10 @@ class TileLoader {
   private buildErrorEntry_(task: PrefetchTask, tile: Tile): PrefetchError {
     const layerName = task.layer.get('name') || task.layer.get('label') || 'unknown';
 
-    const anyTile = tile as unknown as {_prefetchError?: string};
+    const anyTile = tile as unknown as { _prefetchError?: string };
     let reason = anyTile._prefetchError;
     if (!reason) {
-      const src = task.layer.getSource() as unknown as {getUrls?: () => string[]};
+      const src = task.layer.getSource() as unknown as { getUrls?: () => string[] };
       if (src && typeof src.getUrls === 'function') {
         const urls = src.getUrls();
         if (urls && urls.length > 0) {

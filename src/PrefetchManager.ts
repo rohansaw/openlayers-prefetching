@@ -1,17 +1,17 @@
 /**
  * @module ol/prefetch/PrefetchManager
  */
-import {listen, unlistenByKey} from 'ol/events.js';
+import { listen, unlistenByKey } from 'ol/events.js';
 import MapEventType from 'ol/MapEventType.js';
-import {PrefetchCategory, DEFAULT_CATEGORY_PRIORITIES} from './PrefetchConstants';
-import type {PrefetchCategoryKey} from './PrefetchConstants';
+import { PrefetchCategory, DEFAULT_CATEGORY_PRIORITIES } from './PrefetchConstants';
+import type { PrefetchCategoryKey } from './PrefetchConstants';
 import PrefetchStats from './PrefetchStats';
 import PrefetchPlanner from './PrefetchPlanner';
 import PrefetchScheduler from './PrefetchScheduler';
 import TileLoader from './TileLoader';
 import type OLMap from 'ol/Map.js';
 import type TileQueue from 'ol/TileQueue.js';
-import type {Coordinate} from 'ol/coordinate.js';
+import type { Coordinate } from 'ol/coordinate.js';
 import type {
   BackgroundLayerEntry,
   PrefetchManagerOptions,
@@ -19,7 +19,7 @@ import type {
   PrefetchTask,
   PrefetchTileLayer,
 } from './PrefetchTypes';
-import type {EventsKey} from 'ol/events.js';
+import type { EventsKey } from 'ol/events.js';
 
 /**
  * Manages controlled prefetching of tiles across multiple layers and locations.
@@ -61,7 +61,7 @@ class PrefetchManager {
   constructor(options: PrefetchManagerOptions) {
     this.map_ = options.map;
     this.maxConcurrentPrefetches_ = options.maxConcurrentPrefetches ?? 16;
-    this.idleDelay_ = options.idleDelay ?? 300;
+    this.idleDelay_ = options.idleDelay ?? 80;
     this.enabled_ = options.enabled ?? true;
     this.loadActiveDuringInteraction_ = options.loadActiveDuringInteraction ?? true;
 
@@ -107,7 +107,8 @@ class PrefetchManager {
       // Keep only active-layer spatial tasks and next-nav tasks in the queue.
       this.queue_ = this.queue_.filter(
         (task) =>
-          (task.category === PrefetchCategory.SPATIAL_ACTIVE && task.layer === this.activeLayer_) ||
+          (task.category === PrefetchCategory.SPATIAL_ACTIVE &&
+            task.layer === this.activeLayer_) ||
           task.category === PrefetchCategory.NEXT_NAV_ACTIVE ||
           task.category === PrefetchCategory.NEXT_NAV_BACKGROUND,
       );
@@ -189,10 +190,12 @@ class PrefetchManager {
     }
 
     // During interaction, only allow active-layer spatial tasks through.
-    const interactionFilter = this.userInteracting_ && this.loadActiveDuringInteraction_
-      ? (task: PrefetchTask) =>
-          task.category === PrefetchCategory.SPATIAL_ACTIVE && task.layer === this.activeLayer_
-      : null;
+    const interactionFilter =
+      this.userInteracting_ && this.loadActiveDuringInteraction_
+        ? (task: PrefetchTask) =>
+            task.category === PrefetchCategory.SPATIAL_ACTIVE &&
+            task.layer === this.activeLayer_
+        : null;
 
     if (this.userInteracting_ && !interactionFilter) {
       return;
@@ -240,7 +243,7 @@ class PrefetchManager {
   }
 
   private getMapTileQueue_(): TileQueue | null {
-    const mapAny = this.map_ as unknown as {tileQueue_?: TileQueue};
+    const mapAny = this.map_ as unknown as { tileQueue_?: TileQueue };
     return mapAny.tileQueue_ ?? null;
   }
 
@@ -258,7 +261,7 @@ class PrefetchManager {
   addBackgroundLayer(layer: PrefetchTileLayer, priority = 0): void {
     const exists = this.backgroundLayers_.some((e) => e.layer === layer);
     if (!exists) {
-      this.backgroundLayers_.push({layer, priority});
+      this.backgroundLayers_.push({ layer, priority });
       this.backgroundLayers_.sort((a, b) => a.priority - b.priority);
       this.rebuildQueue_();
       this.scheduler_.scheduleTick();
@@ -283,8 +286,8 @@ class PrefetchManager {
     }
   }
 
-  getBackgroundLayers(): Array<{layer: PrefetchTileLayer; priority: number}> {
-    return this.backgroundLayers_.map((e) => ({layer: e.layer, priority: e.priority}));
+  getBackgroundLayers(): Array<{ layer: PrefetchTileLayer; priority: number }> {
+    return this.backgroundLayers_.map((e) => ({ layer: e.layer, priority: e.priority }));
   }
 
   setActiveLayer(layer: PrefetchTileLayer): void {
@@ -294,7 +297,7 @@ class PrefetchManager {
   }
 
   setNextTarget(center: Coordinate, zoom: number): void {
-    this.nextTarget_ = {center, zoom};
+    this.nextTarget_ = { center, zoom };
     this.rebuildQueue_();
     this.scheduler_.scheduleTick();
   }
@@ -339,7 +342,7 @@ class PrefetchManager {
   }
 
   getCategoryPriorities(): Record<PrefetchCategoryKey, number> {
-    return {...this.categoryPriorities_};
+    return { ...this.categoryPriorities_ };
   }
 
   onStats(callback: (stats: import('./PrefetchTypes').PrefetchStats) => void): void {
@@ -378,4 +381,4 @@ class PrefetchManager {
 }
 
 export default PrefetchManager;
-export {PrefetchCategory};
+export { PrefetchCategory };

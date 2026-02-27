@@ -1,5 +1,5 @@
-import {test, expect} from '@playwright/test';
-import type {Page} from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 declare global {
   interface Window {
@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-type LogEntry = {category: string; layer: string};
+type LogEntry = { category: string; layer: string };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -33,11 +33,11 @@ async function openPage(page: Page, cfg: object): Promise<LogEntry[]> {
       category: url.searchParams.get('category') ?? 'unknown',
       layer: url.searchParams.get('layer') ?? 'unknown',
     });
-    route.fulfill({status: 200, body: 'ok'});
+    route.fulfill({ status: 200, body: 'ok' });
   });
 
-  await page.goto(testUrl(cfg), {waitUntil: 'domcontentloaded'});
-  await page.waitForFunction(() => window.__ready === true, {timeout: 10000});
+  await page.goto(testUrl(cfg), { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.__ready === true, { timeout: 10000 });
 
   return log;
 }
@@ -49,10 +49,10 @@ async function waitForCategories(
   timeout = 12000,
 ): Promise<void> {
   await expect
-    .poll(
-      () => required.every((cat) => log.some((e) => e.category === cat)),
-      {timeout, intervals: [150]},
-    )
+    .poll(() => required.every((cat) => log.some((e) => e.category === cat)), {
+      timeout,
+      intervals: [150],
+    })
     .toBe(true);
 }
 
@@ -77,13 +77,13 @@ const DEFAULT_PRIORITIES = {
 // Tests
 // ---------------------------------------------------------------------------
 
-test('nextNav tiles load before spatial, spatial before bgViewport', async ({page}) => {
+test('nextNav tiles load before spatial, spatial before bgViewport', async ({ page }) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'background', bgPriority: 5},
+      { name: 'active', active: true },
+      { name: 'background', bgPriority: 5 },
     ],
-    nextTarget: {center: [10, 51], zoom: 5},
+    nextTarget: { center: [10, 51], zoom: 5 },
     categoryPriorities: DEFAULT_PRIORITIES,
   });
 
@@ -104,14 +104,16 @@ test('nextNav tiles load before spatial, spatial before bgViewport', async ({pag
   }
 });
 
-test('reversed priorities: bgViewport loads before spatial before nextNav', async ({page}) => {
+test('reversed priorities: bgViewport loads before spatial before nextNav', async ({
+  page,
+}) => {
   // Flip priorities so background loads first
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'background', bgPriority: 5},
+      { name: 'active', active: true },
+      { name: 'background', bgPriority: 5 },
     ],
-    nextTarget: {center: [10, 51], zoom: 5},
+    nextTarget: { center: [10, 51], zoom: 5 },
     categoryPriorities: {
       bgViewport: 1,
       spatial: 3,
@@ -132,17 +134,19 @@ test('reversed priorities: bgViewport loads before spatial before nextNav', asyn
   expect(bgIdx).toBeLessThan(nextNavIdx);
 });
 
-test('two background layers load in their registered priority order', async ({page}) => {
+test('two background layers load in their registered priority order', async ({
+  page,
+}) => {
   // bgHigh has priority 2, bgLow has priority 8 → bgHigh tiles come first
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'bgHigh', bgPriority: 2},
-      {name: 'bgLow',  bgPriority: 8},
+      { name: 'active', active: true },
+      { name: 'bgHigh', bgPriority: 2 },
+      { name: 'bgLow', bgPriority: 8 },
     ],
     categoryPriorities: {
       spatial: 1,
-      bgViewport: 3,  // both bg layers use this category; sub-priority from bgPriority
+      bgViewport: 3, // both bg layers use this category; sub-priority from bgPriority
       bgBuffer: 5,
       nextNavActive: 7,
       nextNavBackground: 9,
@@ -154,18 +158,20 @@ test('two background layers load in their registered priority order', async ({pa
 
   // bgHigh tiles should appear before bgLow tiles
   const firstHighIdx = bgEntries.findIndex((e) => e.layer === 'bgHigh-layer');
-  const firstLowIdx  = bgEntries.findIndex((e) => e.layer === 'bgLow-layer');
+  const firstLowIdx = bgEntries.findIndex((e) => e.layer === 'bgLow-layer');
 
   expect(firstHighIdx).toBeGreaterThanOrEqual(0);
   expect(firstLowIdx).toBeGreaterThanOrEqual(0);
   expect(firstHighIdx).toBeLessThan(firstLowIdx);
 });
 
-test('without a next target only spatial and bgViewport categories appear', async ({page}) => {
+test('without a next target only spatial and bgViewport categories appear', async ({
+  page,
+}) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'background', bgPriority: 5},
+      { name: 'active', active: true },
+      { name: 'background', bgPriority: 5 },
     ],
     // No nextTarget
     categoryPriorities: DEFAULT_PRIORITIES,
@@ -185,13 +191,15 @@ test('without a next target only spatial and bgViewport categories appear', asyn
   }
 });
 
-test('active-layer-only: only spatial and buffer categories, no bgViewport', async ({page}) => {
+test('active-layer-only: only spatial and buffer categories, no bgViewport', async ({
+  page,
+}) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
+      { name: 'active', active: true },
       // No background layers
     ],
-    nextTarget: {center: [10, 51], zoom: 5},
+    nextTarget: { center: [10, 51], zoom: 5 },
     categoryPriorities: DEFAULT_PRIORITIES,
   });
 
@@ -203,13 +211,13 @@ test('active-layer-only: only spatial and buffer categories, no bgViewport', asy
   expect(log.some((e) => e.category === 'nextNavActive')).toBe(true);
 });
 
-test('three background layers load in correct sub-priority order', async ({page}) => {
+test('three background layers load in correct sub-priority order', async ({ page }) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'bg1', bgPriority: 1},
-      {name: 'bg2', bgPriority: 5},
-      {name: 'bg3', bgPriority: 10},
+      { name: 'active', active: true },
+      { name: 'bg1', bgPriority: 1 },
+      { name: 'bg2', bgPriority: 5 },
+      { name: 'bg3', bgPriority: 10 },
     ],
     categoryPriorities: {
       spatial: 1,
@@ -238,13 +246,13 @@ test('three background layers load in correct sub-priority order', async ({page}
 // Interaction tests: panning and zooming pause prefetch, then it resumes
 // ---------------------------------------------------------------------------
 
-test('panning pauses prefetch and it resumes after the pan ends', async ({page}) => {
+test('panning pauses prefetch and it resumes after the pan ends', async ({ page }) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'background', bgPriority: 5},
+      { name: 'active', active: true },
+      { name: 'background', bgPriority: 5 },
     ],
-    nextTarget: {center: [10, 51], zoom: 5},
+    nextTarget: { center: [10, 51], zoom: 5 },
     categoryPriorities: DEFAULT_PRIORITIES,
     // Use a longer idleDelay so we can observe the pause clearly
     idleDelay: 200,
@@ -263,7 +271,7 @@ test('panning pauses prefetch and it resumes after the pan ends', async ({page})
 
   await page.mouse.move(cx, cy);
   await page.mouse.down();
-  await page.mouse.move(cx + 80, cy + 40, {steps: 10});
+  await page.mouse.move(cx + 80, cy + 40, { steps: 10 });
 
   // During the drag, prefetch should be paused — snapshot the count
   const countDuringPan = log.length;
@@ -272,20 +280,22 @@ test('panning pauses prefetch and it resumes after the pan ends', async ({page})
 
   // After releasing, idleDelay passes and prefetch resumes
   await expect
-    .poll(() => log.length, {timeout: 8000, intervals: [200]})
+    .poll(() => log.length, { timeout: 8000, intervals: [200] })
     .toBeGreaterThan(countDuringPan);
 
   // Sanity: the log grew after the pan ended
   expect(log.length).toBeGreaterThan(countBeforePan);
 });
 
-test('zooming in pauses prefetch and it resumes with tiles at the new zoom', async ({page}) => {
+test('zooming in pauses prefetch and it resumes with tiles at the new zoom', async ({
+  page,
+}) => {
   const log = await openPage(page, {
     layers: [
-      {name: 'active', active: true},
-      {name: 'background', bgPriority: 5},
+      { name: 'active', active: true },
+      { name: 'background', bgPriority: 5 },
     ],
-    nextTarget: {center: [10, 51], zoom: 6},
+    nextTarget: { center: [10, 51], zoom: 6 },
     categoryPriorities: DEFAULT_PRIORITIES,
     idleDelay: 200,
     tickInterval: 50,
@@ -308,7 +318,7 @@ test('zooming in pauses prefetch and it resumes with tiles at the new zoom', asy
 
   // After zoom animation + idleDelay, prefetch should resume
   await expect
-    .poll(() => log.length, {timeout: 10000, intervals: [200]})
+    .poll(() => log.length, { timeout: 10000, intervals: [200] })
     .toBeGreaterThan(countDuringZoom);
 
   expect(log.length).toBeGreaterThan(countBeforeZoom);

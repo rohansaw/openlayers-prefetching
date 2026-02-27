@@ -1,7 +1,7 @@
 /**
  * @module ol/prefetch/PrefetchConstants
  */
-import type {PrefetchCategoryStats} from './PrefetchTypes';
+import type { PrefetchCategoryStats } from './PrefetchTypes';
 
 export const PrefetchCategory = {
   SPATIAL_ACTIVE: 'spatial',
@@ -12,7 +12,7 @@ export const PrefetchCategory = {
 } as const;
 
 export type PrefetchCategoryKey =
-  typeof PrefetchCategory[keyof typeof PrefetchCategory];
+  (typeof PrefetchCategory)[keyof typeof PrefetchCategory];
 
 export const DEFAULT_CATEGORY_PRIORITIES: Record<PrefetchCategoryKey, number> = {
   [PrefetchCategory.SPATIAL_ACTIVE]: 1,
@@ -39,12 +39,30 @@ export function getCategoryName(category: PrefetchCategoryKey | string): string 
   }
 }
 
-export function createInitialCategoryCounts(): Record<PrefetchCategoryKey, PrefetchCategoryStats> {
+export function createInitialCategoryCounts(): Record<
+  PrefetchCategoryKey,
+  PrefetchCategoryStats
+> {
   return {
-    [PrefetchCategory.SPATIAL_ACTIVE]: {queued: 0, loading: 0, loaded: 0, errors: 0},
-    [PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT]: {queued: 0, loading: 0, loaded: 0, errors: 0},
-    [PrefetchCategory.BACKGROUND_LAYERS_BUFFER]: {queued: 0, loading: 0, loaded: 0, errors: 0},
-    [PrefetchCategory.NEXT_NAV_ACTIVE]: {queued: 0, loading: 0, loaded: 0, errors: 0},
-    [PrefetchCategory.NEXT_NAV_BACKGROUND]: {queued: 0, loading: 0, loaded: 0, errors: 0},
+    [PrefetchCategory.SPATIAL_ACTIVE]: { queued: 0, loading: 0, loaded: 0, errors: 0 },
+    [PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT]: {
+      queued: 0,
+      loading: 0,
+      loaded: 0,
+      errors: 0,
+    },
+    [PrefetchCategory.BACKGROUND_LAYERS_BUFFER]: {
+      queued: 0,
+      loading: 0,
+      loaded: 0,
+      errors: 0,
+    },
+    [PrefetchCategory.NEXT_NAV_ACTIVE]: { queued: 0, loading: 0, loaded: 0, errors: 0 },
+    [PrefetchCategory.NEXT_NAV_BACKGROUND]: {
+      queued: 0,
+      loading: 0,
+      loaded: 0,
+      errors: 0,
+    },
   };
 }

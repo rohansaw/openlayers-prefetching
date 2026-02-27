@@ -1,18 +1,23 @@
 /**
  * @module ol/prefetch/PrefetchPlanner
  */
-import {getUid} from 'ol/util.js';
+import { getUid } from 'ol/util.js';
 import TileState from 'ol/TileState.js';
-import {getForViewAndSize, buffer as bufferExtent} from 'ol/extent.js';
-import {PrefetchCategory} from './PrefetchConstants';
-import type {PrefetchCategoryKey} from './PrefetchConstants';
+import { getForViewAndSize, buffer as bufferExtent } from 'ol/extent.js';
+import { PrefetchCategory } from './PrefetchConstants';
+import type { PrefetchCategoryKey } from './PrefetchConstants';
 import type Map from 'ol/Map.js';
 import type TileSource from 'ol/source/Tile.js';
 import type Tile from 'ol/Tile.js';
 import type Projection from 'ol/proj/Projection.js';
-import type {Extent} from 'ol/extent.js';
-import type {TileCoord} from 'ol/tilecoord.js';
-import type {BackgroundLayerEntry, PrefetchTarget, PrefetchTask, PrefetchTileLayer} from './PrefetchTypes';
+import type { Extent } from 'ol/extent.js';
+import type { TileCoord } from 'ol/tilecoord.js';
+import type {
+  BackgroundLayerEntry,
+  PrefetchTarget,
+  PrefetchTask,
+  PrefetchTileLayer,
+} from './PrefetchTypes';
 import type PrefetchStats from './PrefetchStats';
 
 interface PrefetchPlannerContext {
@@ -78,9 +83,9 @@ class PrefetchPlanner {
     const z = Math.round(zoom);
     const projection = view.getProjection();
     const pixelRatio =
-      (map as unknown as {getPixelRatio?: () => number}).getPixelRatio?.() ?? 1;
+      (map as unknown as { getPixelRatio?: () => number }).getPixelRatio?.() ?? 1;
 
-    const ctx: PrefetchPlannerContext = {queue, seenTiles, pixelRatio, stats};
+    const ctx: PrefetchPlannerContext = { queue, seenTiles, pixelRatio, stats };
 
     this.enqueueSpatialBuffer_(
       ctx,
@@ -110,8 +115,7 @@ class PrefetchPlanner {
     const nextTargetKey = nextTarget
       ? `${nextTarget.center[0]}|${nextTarget.center[1]}|${nextTarget.zoom}`
       : null;
-    const preserveNextCounts =
-      nextTargetKey && nextTargetKey === this.lastNextTargetKey_;
+    const preserveNextCounts = nextTargetKey && nextTargetKey === this.lastNextTargetKey_;
     const prevNextNavActive = preserveNextCounts
       ? stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued
       : 0;
@@ -146,9 +150,9 @@ class PrefetchPlanner {
     const z = Math.round(zoom);
     const projection = view.getProjection();
     const pixelRatio =
-      (map as unknown as {getPixelRatio?: () => number}).getPixelRatio?.() ?? 1;
+      (map as unknown as { getPixelRatio?: () => number }).getPixelRatio?.() ?? 1;
 
-    const ctx: PrefetchPlannerContext = {queue, seenTiles, pixelRatio, stats};
+    const ctx: PrefetchPlannerContext = { queue, seenTiles, pixelRatio, stats };
 
     if (activeLayer) {
       this.enqueueSpatialBuffer_(
@@ -182,12 +186,7 @@ class PrefetchPlanner {
       this.lastNextTargetKey_ = nextTargetKey;
       const nextZ = Math.round(nextTarget.zoom);
       const nextResolution = view.getResolutionForZoom(nextTarget.zoom);
-      const nextExtent = getForViewAndSize(
-        nextTarget.center,
-        nextResolution,
-        0,
-        mapSize,
-      );
+      const nextExtent = getForViewAndSize(nextTarget.center, nextResolution, 0, mapSize);
 
       if (activeLayer) {
         this.enqueueViewportTiles_(
@@ -234,10 +233,7 @@ class PrefetchPlanner {
         stats.setQueuedCount(PrefetchCategory.NEXT_NAV_ACTIVE, prevNextNavActive);
       }
       if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_BACKGROUND].queued === 0) {
-        stats.setQueuedCount(
-          PrefetchCategory.NEXT_NAV_BACKGROUND,
-          prevNextNavBackground,
-        );
+        stats.setQueuedCount(PrefetchCategory.NEXT_NAV_BACKGROUND, prevNextNavBackground);
       }
     }
 

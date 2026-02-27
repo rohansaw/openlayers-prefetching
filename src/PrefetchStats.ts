@@ -1,8 +1,8 @@
 /**
  * @module ol/prefetch/PrefetchStats
  */
-import {PrefetchCategory, createInitialCategoryCounts} from './PrefetchConstants';
-import type {PrefetchCategoryKey} from './PrefetchConstants';
+import { PrefetchCategory, createInitialCategoryCounts } from './PrefetchConstants';
+import type { PrefetchCategoryKey } from './PrefetchConstants';
 import type {
   PrefetchError,
   PrefetchStats as PrefetchStatsSnapshot,
@@ -115,14 +115,20 @@ class PrefetchStats {
       loaded: this.loadedCount_,
       errors: this.errorCount_,
       paused,
-      spatialActive: {...this.categoryCounts_[PrefetchCategory.SPATIAL_ACTIVE]},
-      bgViewport: {...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT]},
-      bgBuffer: {...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_BUFFER]},
-      nextNavActive: {...this.categoryCounts_[PrefetchCategory.NEXT_NAV_ACTIVE]},
-      nextNavBackground: {...this.categoryCounts_[PrefetchCategory.NEXT_NAV_BACKGROUND]},
-      nextTarget: nextTarget ? {center: nextTarget.center, zoom: nextTarget.zoom} : null,
+      spatialActive: { ...this.categoryCounts_[PrefetchCategory.SPATIAL_ACTIVE] },
+      bgViewport: {
+        ...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT],
+      },
+      bgBuffer: { ...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_BUFFER] },
+      nextNavActive: { ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_ACTIVE] },
+      nextNavBackground: {
+        ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_BACKGROUND],
+      },
+      nextTarget: nextTarget
+        ? { center: nextTarget.center, zoom: nextTarget.zoom }
+        : null,
       recentErrors: this.errorLog_.slice(),
-      categoryPriorities: {...categoryPriorities},
+      categoryPriorities: { ...categoryPriorities },
     };
   }
 

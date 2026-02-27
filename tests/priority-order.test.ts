@@ -1,7 +1,7 @@
 import assert from 'assert/strict';
 import PrefetchPlanner from '../src/PrefetchPlanner.ts';
 import PrefetchStats from '../src/PrefetchStats.ts';
-import {PrefetchCategory} from '../src/PrefetchConstants.ts';
+import { PrefetchCategory } from '../src/PrefetchConstants.ts';
 import TileState from 'ol/TileState.js';
 
 const createTileRange = (minX: number, maxX: number, minY: number, maxY: number) => ({
@@ -42,7 +42,7 @@ const createLayer = (name: string) => {
 
 const createView = () => ({
   isDef: () => true,
-  getState: () => ({center: [0, 0], resolution: 1, rotation: 0}),
+  getState: () => ({ center: [0, 0], resolution: 1, rotation: 0 }),
   getZoom: () => 5,
   getProjection: () => ({}),
   getResolutionForZoom: () => 1,
@@ -61,11 +61,11 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
   const bgLayerLow = createLayer('bg-low');
   const bgLayerHigh = createLayer('bg-high');
   const backgroundLayers = [
-    {layer: bgLayerLow, priority: 1},
-    {layer: bgLayerHigh, priority: 10},
+    { layer: bgLayerLow, priority: 1 },
+    { layer: bgLayerHigh, priority: 10 },
   ];
 
-  const nextTarget = {center: [100, 100] as [number, number], zoom: 5};
+  const nextTarget = { center: [100, 100] as [number, number], zoom: 5 };
   const queue = planner.buildQueue(
     createMap() as any,
     activeLayer as any,
@@ -75,7 +75,7 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
     stats,
   );
 
-  return {queue, bgLayerLow, bgLayerHigh};
+  return { queue, bgLayerLow, bgLayerHigh };
 };
 
 (() => {
@@ -87,7 +87,7 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
     [PrefetchCategory.NEXT_NAV_BACKGROUND]: 6,
   };
 
-  const {queue, bgLayerLow, bgLayerHigh} = buildQueue(priorities);
+  const { queue, bgLayerLow, bgLayerHigh } = buildQueue(priorities);
   assert.ok(queue.length > 0, 'queue should contain tasks');
 
   let lastPriority = -Infinity;
@@ -103,12 +103,8 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
     (task) => task.category === PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT,
   );
   assert.ok(bgTasks.length >= 2, 'expected background tasks for both layers');
-  const lowIndex = bgTasks.findIndex(
-    (task) => (task.layer as unknown) === bgLayerLow,
-  );
-  const highIndex = bgTasks.findIndex(
-    (task) => (task.layer as unknown) === bgLayerHigh,
-  );
+  const lowIndex = bgTasks.findIndex((task) => (task.layer as unknown) === bgLayerLow);
+  const highIndex = bgTasks.findIndex((task) => (task.layer as unknown) === bgLayerHigh);
   assert.ok(lowIndex !== -1 && highIndex !== -1, 'missing background layer tasks');
   assert.ok(lowIndex < highIndex, 'background layer priority ordering broken');
 })();
@@ -122,7 +118,7 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
     [PrefetchCategory.NEXT_NAV_BACKGROUND]: 6,
   };
 
-  const {queue} = buildQueue(priorities);
+  const { queue } = buildQueue(priorities);
   const firstCategory = queue[0]?.category;
   assert.equal(
     firstCategory,

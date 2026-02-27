@@ -2,9 +2,8 @@ import OLMap from 'ol/Map.js';
 import View from 'ol/View.js';
 import TileLayer from 'ol/layer/Tile.js';
 import XYZ from 'ol/source/XYZ.js';
-import {fromLonLat} from 'ol/proj.js';
-import PrefetchManager, {PrefetchCategory} from 'openlayers-prefetching';
-
+import { fromLonLat } from 'ol/proj.js';
+import PrefetchManager, { PrefetchCategory } from 'openlayers-prefetching';
 
 const REGISTER_URL =
   'https://planetarycomputer.microsoft.com/api/data/v1/mosaic/register';
@@ -21,44 +20,44 @@ const NEXT_NAV_ZOOM = 12;
 const CAMPAIGN_BBOX = [-25.0, 34.0, 45.0, 72.0];
 
 const CAPITAL_TARGETS = [
-  {name: 'London', lon: -0.1276, lat: 51.5072},
-  {name: 'Paris', lon: 2.3522, lat: 48.8566},
-  {name: 'Berlin', lon: 13.405, lat: 52.52},
-  {name: 'Madrid', lon: -3.7038, lat: 40.4168},
-  {name: 'Rome', lon: 12.4964, lat: 41.9028},
-  {name: 'Lisbon', lon: -9.1393, lat: 38.7223},
-  {name: 'Dublin', lon: -6.2603, lat: 53.3498},
-  {name: 'Brussels', lon: 4.3517, lat: 50.8503},
-  {name: 'Amsterdam', lon: 4.9041, lat: 52.3676},
-  {name: 'Vienna', lon: 16.3738, lat: 48.2082},
-  {name: 'Prague', lon: 14.4378, lat: 50.0755},
-  {name: 'Warsaw', lon: 21.0122, lat: 52.2297},
-  {name: 'Budapest', lon: 19.0402, lat: 47.4979},
-  {name: 'Stockholm', lon: 18.0686, lat: 59.3293},
-  {name: 'Oslo', lon: 10.7522, lat: 59.9139},
-  {name: 'Copenhagen', lon: 12.5683, lat: 55.6761},
-  {name: 'Helsinki', lon: 24.9384, lat: 60.1699},
-  {name: 'Athens', lon: 23.7275, lat: 37.9838},
-  {name: 'Bucharest', lon: 26.1025, lat: 44.4268},
-  {name: 'Sofia', lon: 23.3219, lat: 42.6977},
-  {name: 'Kyiv', lon: 30.5234, lat: 50.4501},
-  {name: 'Zagreb', lon: 15.9819, lat: 45.815},
-  {name: 'Belgrade', lon: 20.4489, lat: 44.7866},
-  {name: 'Sarajevo', lon: 18.4131, lat: 43.8563},
-  {name: 'Skopje', lon: 21.4314, lat: 41.9981},
-  {name: 'Tirana', lon: 19.819, lat: 41.3275},
-  {name: 'Podgorica', lon: 19.2594, lat: 42.4304},
-  {name: 'Reykjavik', lon: -21.8174, lat: 64.1265},
+  { name: 'London', lon: -0.1276, lat: 51.5072 },
+  { name: 'Paris', lon: 2.3522, lat: 48.8566 },
+  { name: 'Berlin', lon: 13.405, lat: 52.52 },
+  { name: 'Madrid', lon: -3.7038, lat: 40.4168 },
+  { name: 'Rome', lon: 12.4964, lat: 41.9028 },
+  { name: 'Lisbon', lon: -9.1393, lat: 38.7223 },
+  { name: 'Dublin', lon: -6.2603, lat: 53.3498 },
+  { name: 'Brussels', lon: 4.3517, lat: 50.8503 },
+  { name: 'Amsterdam', lon: 4.9041, lat: 52.3676 },
+  { name: 'Vienna', lon: 16.3738, lat: 48.2082 },
+  { name: 'Prague', lon: 14.4378, lat: 50.0755 },
+  { name: 'Warsaw', lon: 21.0122, lat: 52.2297 },
+  { name: 'Budapest', lon: 19.0402, lat: 47.4979 },
+  { name: 'Stockholm', lon: 18.0686, lat: 59.3293 },
+  { name: 'Oslo', lon: 10.7522, lat: 59.9139 },
+  { name: 'Copenhagen', lon: 12.5683, lat: 55.6761 },
+  { name: 'Helsinki', lon: 24.9384, lat: 60.1699 },
+  { name: 'Athens', lon: 23.7275, lat: 37.9838 },
+  { name: 'Bucharest', lon: 26.1025, lat: 44.4268 },
+  { name: 'Sofia', lon: 23.3219, lat: 42.6977 },
+  { name: 'Kyiv', lon: 30.5234, lat: 50.4501 },
+  { name: 'Zagreb', lon: 15.9819, lat: 45.815 },
+  { name: 'Belgrade', lon: 20.4489, lat: 44.7866 },
+  { name: 'Sarajevo', lon: 18.4131, lat: 43.8563 },
+  { name: 'Skopje', lon: 21.4314, lat: 41.9981 },
+  { name: 'Tirana', lon: 19.819, lat: 41.3275 },
+  { name: 'Podgorica', lon: 19.2594, lat: 42.4304 },
+  { name: 'Reykjavik', lon: -21.8174, lat: 64.1265 },
 ];
 
 // Default date ranges (monthly through the growing season)
 const DEFAULT_RANGES = [
-  {start: '2024-04-01', end: '2024-04-30'},
-  {start: '2024-05-01', end: '2024-05-31'},
-  {start: '2024-06-01', end: '2024-06-30'},
-  {start: '2024-07-01', end: '2024-07-31'},
-  {start: '2024-08-01', end: '2024-08-31'},
-  {start: '2024-09-01', end: '2024-09-30'},
+  { start: '2024-04-01', end: '2024-04-30' },
+  { start: '2024-05-01', end: '2024-05-31' },
+  { start: '2024-06-01', end: '2024-06-30' },
+  { start: '2024-07-01', end: '2024-07-31' },
+  { start: '2024-08-01', end: '2024-08-31' },
+  { start: '2024-09-01', end: '2024-09-30' },
 ];
 
 // -----------------------------------------------------------------------------
@@ -87,7 +86,6 @@ let prefetchManager = null;
 // Map (main)
 // -----------------------------------------------------------------------------
 
-
 const initialCenter = fromLonLat([35.05, 48.46]); // Dnipro
 const mainView = new View({
   center: initialCenter,
@@ -100,7 +98,8 @@ const mainMap = new OLMap({
   target: 'main-map',
   layers: [],
   view: mainView,
-});4
+});
+4;
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -114,13 +113,10 @@ function buildSearchBody(startDate, endDate) {
       args: [
         {
           op: 'anyinteracts',
-          args: [
-            {property: 'datetime'},
-            {interval: [startDate, endDate]},
-          ],
+          args: [{ property: 'datetime' }, { interval: [startDate, endDate] }],
         },
-        {op: '<=', args: [{property: 'eo:cloud_cover'}, 90]},
-        {op: '=', args: [{property: 'collection'}, 'sentinel-2-l2a']},
+        { op: '<=', args: [{ property: 'eo:cloud_cover' }, 90] },
+        { op: '=', args: [{ property: 'collection' }, 'sentinel-2-l2a'] },
       ],
     },
     metadata: {
@@ -152,7 +148,7 @@ function renderNavTargets() {
   const nextNameEl = document.getElementById('next-capital-name');
   const nextTarget = getNextTarget();
   if (nextNameEl) {
-  nextNameEl.textContent = nextTarget ? nextTarget.name : '-';
+    nextNameEl.textContent = nextTarget ? nextTarget.name : '-';
   }
   if (!container) {
     return;
@@ -189,7 +185,7 @@ function preloadNextTarget() {
  * error reporting.  Uses `tile.setState(3)` to signal ERROR.
  */
 function customTileLoadFunction(imageTile, src) {
-  fetch(src, {mode: 'cors', credentials: 'omit'})
+  fetch(src, { mode: 'cors', credentials: 'omit' })
     .then((response) => {
       if (!response.ok) {
         return response.text().then((body) => {
@@ -230,7 +226,7 @@ async function registerMosaic(startDate, endDate) {
   const body = buildSearchBody(startDate, endDate);
   const resp = await fetch(REGISTER_URL, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!resp.ok) {
@@ -259,7 +255,7 @@ async function registerAll() {
 
   for (let i = 0; i < dateRanges.length; i++) {
     const dr = dateRanges[i];
-  statusEl.textContent = `Registering ${i + 1}/${dateRanges.length}: ${dr.start} to ${dr.end}...`;
+    statusEl.textContent = `Registering ${i + 1}/${dateRanges.length}: ${dr.start} to ${dr.end}...`;
     try {
       dr.searchId = await registerMosaic(dr.start, dr.end);
       dr.error = null;
@@ -272,7 +268,7 @@ async function registerAll() {
       dr.searchId = null;
       dr.error = e.message;
       fail++;
-  log(`#${i + 1} failed: ${e.message}`, 'warn');
+      log(`#${i + 1} failed: ${e.message}`, 'warn');
     }
     renderDateRanges();
   }
@@ -311,7 +307,7 @@ function teardown() {
   mainLayers = [];
 
   // Dispose preview maps
-  previewMaps.forEach(({map}) => map.dispose());
+  previewMaps.forEach(({ map }) => map.dispose());
   previewMaps = [];
 
   // Clear preview row DOM
@@ -337,7 +333,7 @@ function buildSharedSources() {
       crossOrigin: 'anonymous',
       transition: 0,
       tileLoadFunction: customTileLoadFunction,
-  attributions: '(c) Sentinel-2 L2A via Planetary Computer',
+      attributions: '(c) Sentinel-2 L2A via Planetary Computer',
     });
     sharedSources.push(source);
   }
@@ -349,21 +345,21 @@ function buildSharedSources() {
 
 function buildMainLayers() {
   const registered = dateRanges
-    .map((dr, i) => ({dr, origIndex: i}))
-    .filter(({dr}) => dr.searchId);
+    .map((dr, i) => ({ dr, origIndex: i }))
+    .filter(({ dr }) => dr.searchId);
 
   if (activeLayerIndex >= registered.length) {
     activeLayerIndex = 0;
   }
 
-  mainLayers = registered.map(({dr, origIndex}, layerIdx) => {
+  mainLayers = registered.map(({ dr, origIndex }, layerIdx) => {
     const layer = new TileLayer({
       source: sharedSources[layerIdx],
       visible: layerIdx === activeLayerIndex,
       preload: Infinity,
       properties: {
-  name: `S2 ${dr.start} to ${dr.end}`,
-  label: `${dr.start} to ${dr.end}`,
+        name: `S2 ${dr.start} to ${dr.end}`,
+        label: `${dr.start} to ${dr.end}`,
         rangeIndex: origIndex,
         prefetchPriority: layerIdx,
       },
@@ -375,7 +371,7 @@ function buildMainLayers() {
   // Update main map label
   if (mainLayers.length > 0) {
     document.getElementById('main-map-label').textContent =
-  `Main - ${mainLayers[activeLayerIndex].get('name')}`;
+      `Main - ${mainLayers[activeLayerIndex].get('name')}`;
   }
 }
 
@@ -390,10 +386,10 @@ function buildPreviewMaps() {
   previewMaps = [];
 
   const registered = dateRanges
-    .map((dr, i) => ({dr, origIndex: i}))
-    .filter(({dr}) => dr.searchId);
+    .map((dr, i) => ({ dr, origIndex: i }))
+    .filter(({ dr }) => dr.searchId);
 
-  registered.forEach(({dr}, layerIdx) => {
+  registered.forEach(({ dr }, layerIdx) => {
     // Container
     const container = document.createElement('div');
     container.className = 'preview-container';
@@ -410,7 +406,7 @@ function buildPreviewMaps() {
     // Label
     const label = document.createElement('div');
     label.className = 'preview-label';
-  label.textContent = `${dr.start} to ${dr.end}`;
+    label.textContent = `${dr.start} to ${dr.end}`;
     container.appendChild(label);
 
     previewRow.appendChild(container);
@@ -420,7 +416,7 @@ function buildPreviewMaps() {
       source: sharedSources[layerIdx],
       visible: true,
       preload: Infinity,
-  properties: {name: `Preview ${dr.start} to ${dr.end}`},
+      properties: { name: `Preview ${dr.start} to ${dr.end}` },
     });
 
     const previewView = new View({
@@ -444,7 +440,7 @@ function buildPreviewMaps() {
       container,
     });
 
-  // Click preview to switch main layer
+    // Click preview to switch main layer
     container.addEventListener('click', () => switchLayer(layerIdx));
   });
 }
@@ -509,7 +505,7 @@ function switchLayer(index) {
 
   // Update main map label
   document.getElementById('main-map-label').textContent =
-  `Main - ${mainLayers[index].get('name')}`;
+    `Main - ${mainLayers[index].get('name')}`;
 
   // Update layer buttons
   document.querySelectorAll('#layer-buttons .layer-btn').forEach((btn, i) => {
@@ -523,7 +519,7 @@ function switchLayer(index) {
 
   const elapsed = (performance.now() - t0).toFixed(1);
   log(
-  `Switched to "${mainLayers[index].get('label')}" (${elapsed}ms) - tiles from preview cache.`,
+    `Switched to "${mainLayers[index].get('label')}" (${elapsed}ms) - tiles from preview cache.`,
     'success',
   );
 }
@@ -559,8 +555,7 @@ function setupPrefetchManager() {
   if (mainLayers.length === 0) return;
 
   const concurrent = parseInt(
-    /** @type {HTMLInputElement} */ (document.getElementById('max-concurrent'))
-      .value,
+    /** @type {HTMLInputElement} */ (document.getElementById('max-concurrent')).value,
     10,
   );
   const enabled = /** @type {HTMLInputElement} */ (
@@ -571,11 +566,9 @@ function setupPrefetchManager() {
     map: mainMap,
     maxConcurrentPrefetches: concurrent,
     spatialBufferFactor: parseFloat(
-      /** @type {HTMLInputElement} */ (
-        document.getElementById('buffer-factor')
-      ).value,
+      /** @type {HTMLInputElement} */ (document.getElementById('buffer-factor')).value,
     ),
-    idleDelay: 300,
+    idleDelay: 80,
     tickInterval: 200,
     enabled,
   });
@@ -611,16 +604,16 @@ function updateStatsUI(stats) {
   // Status
   const pausedEl = document.getElementById('stat-paused');
   if (stats.paused) {
-  pausedEl.textContent = 'Paused (user interacting)';
+    pausedEl.textContent = 'Paused (user interacting)';
     pausedEl.className = 'stat-value status-paused';
   } else {
-  pausedEl.textContent = 'Active';
+    pausedEl.textContent = 'Active';
     pausedEl.className = 'stat-value status-active';
   }
 
   // Totals
   document.getElementById('stat-totals').textContent =
-  `Q:${stats.queued}  L:${stats.loading}  Loaded:${stats.loaded}  Errors:${stats.errors}`;
+    `Q:${stats.queued}  L:${stats.loading}  Loaded:${stats.loaded}  Errors:${stats.errors}`;
 
   // Per-category (with priority + error columns)
   const cp = stats.categoryPriorities || {};
@@ -762,8 +755,7 @@ function renderLayerButtons() {
   container.innerHTML = '';
 
   if (mainLayers.length === 0) {
-    container.innerHTML =
-      '<p class="hint">Register mosaics first to see layers.</p>';
+    container.innerHTML = '<p class="hint">Register mosaics first to see layers.</p>';
     return;
   }
 
@@ -790,20 +782,15 @@ function renderLayerButtons() {
         <span class="priority-hint">(lower = first)</span>
       </label>
     `;
-    prioRow
-      .querySelector('.priority-input')
-      .addEventListener('change', (e) => {
-        const val = parseInt(
-          /** @type {HTMLInputElement} */ (e.target).value,
-          10,
-        );
-        if (isNaN(val) || val < 0) return;
-        layer.set('prefetchPriority', val);
-        if (prefetchManager) {
-          prefetchManager.setBackgroundLayerPriority(layer, val);
-          log(`Priority for "${layer.get('label')}" to ${val}`, 'info');
-        }
-      });
+    prioRow.querySelector('.priority-input').addEventListener('change', (e) => {
+      const val = parseInt(/** @type {HTMLInputElement} */ (e.target).value, 10);
+      if (isNaN(val) || val < 0) return;
+      layer.set('prefetchPriority', val);
+      if (prefetchManager) {
+        prefetchManager.setBackgroundLayerPriority(layer, val);
+        log(`Priority for "${layer.get('label')}" to ${val}`, 'info');
+      }
+    });
     prioRow.addEventListener('click', (e) => e.stopPropagation());
     container.appendChild(prioRow);
   });
@@ -833,7 +820,7 @@ function init() {
       newStart = '2024-04-01';
       newEnd = '2024-04-30';
     }
-    dateRanges.push({start: newStart, end: newEnd, searchId: null, error: null});
+    dateRanges.push({ start: newStart, end: newEnd, searchId: null, error: null });
     renderDateRanges();
   });
 
@@ -843,15 +830,13 @@ function init() {
   });
 
   // Prefetch toggle
-  document
-    .getElementById('prefetch-toggle')
-    .addEventListener('change', (e) => {
-      const checked = /** @type {HTMLInputElement} */ (e.target).checked;
-      if (prefetchManager) {
-        prefetchManager.setEnabled(checked);
-      }
-      log(checked ? 'Prefetching enabled' : 'Prefetching disabled', 'warn');
-    });
+  document.getElementById('prefetch-toggle').addEventListener('change', (e) => {
+    const checked = /** @type {HTMLInputElement} */ (e.target).checked;
+    if (prefetchManager) {
+      prefetchManager.setEnabled(checked);
+    }
+    log(checked ? 'Prefetching enabled' : 'Prefetching disabled', 'warn');
+  });
 
   // Buffer factor
   const bufferSlider = /** @type {HTMLInputElement} */ (
@@ -890,9 +875,7 @@ function init() {
     if (!prefetchManager) return;
     const priorities = {};
     for (const [elId, catKey] of Object.entries(CAT_PRIO_ELEMENT_MAP)) {
-      const input = /** @type {HTMLInputElement} */ (
-        document.getElementById(elId)
-      );
+      const input = /** @type {HTMLInputElement} */ (document.getElementById(elId));
       const val = parseInt(input.value, 10);
       if (!isNaN(val) && val >= 1) {
         priorities[catKey] = val;
@@ -952,11 +935,11 @@ function init() {
 
   // Map movement logging
   mainMap.on('movestart', () => {
-  log('User interaction - prefetch paused', 'warn');
+    log('User interaction - prefetch paused', 'warn');
   });
   mainMap.on('moveend', () => {
     const zoom = mainView.getZoom().toFixed(1);
-  log(`View settled (z${zoom}) - prefetch resuming`, 'success');
+    log(`View settled (z${zoom}) - prefetch resuming`, 'success');
   });
 
   log('Ready - set date ranges and click "Register Mosaics"', 'info');
@@ -984,7 +967,7 @@ let autoRegisterTriggered = false;
 function log(msg, type = '') {
   const entry = document.createElement('div');
   entry.className = 'log-entry';
-  const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false });
   entry.innerHTML = `<span class="log-time">${time}</span> <span class="log-msg ${type}">${msg}</span>`;
   logContainer.prepend(entry);
   logCount++;

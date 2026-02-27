@@ -21,7 +21,9 @@
     "build": "rollup -c rollup.config.js",
     "dev": "rollup -c rollup.config.js -w",
     "prepublishOnly": "npm run build",
-  "test": "tsx tests/priority-order.test.ts",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.js\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.js\"",
+    "test": "tsx tests/priority-order.test.ts",
     "test:e2e": "npm run build && playwright test",
     "serve": "npx http-server . -p 8080"
   },
@@ -48,10 +50,11 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.30",
     "ol": "^8.0.0",
+    "prettier": "^3.8.1",
     "rollup": "^3.0.0",
     "ts-node": "^10.9.2",
-    "tsx": "^4.7.1",
     "tslib": "^2.6.2",
+    "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }
 }

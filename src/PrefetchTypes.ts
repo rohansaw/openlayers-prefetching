@@ -4,9 +4,9 @@
 import type Map from 'ol/Map.js';
 import type BaseTileLayer from 'ol/layer/BaseTile.js';
 import type TileSource from 'ol/source/Tile.js';
-import type {Coordinate} from 'ol/coordinate.js';
-import type {TileCoord} from 'ol/tilecoord.js';
-import type {PrefetchCategoryKey} from './PrefetchConstants';
+import type { Coordinate } from 'ol/coordinate.js';
+import type { TileCoord } from 'ol/tilecoord.js';
+import type { PrefetchCategoryKey } from './PrefetchConstants';
 
 export interface PrefetchTarget {
   center: Coordinate;
@@ -55,7 +55,7 @@ export interface PrefetchStats {
   bgBuffer: PrefetchCategoryStats;
   nextNavActive: PrefetchCategoryStats;
   nextNavBackground: PrefetchCategoryStats;
-  nextTarget: {center: Coordinate; zoom: number} | null;
+  nextTarget: { center: Coordinate; zoom: number } | null;
   recentErrors: PrefetchError[];
   categoryPriorities: Record<PrefetchCategoryKey, number>;
 }
