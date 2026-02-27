@@ -39,6 +39,63 @@ class PrefetchPlanner {
     this.spatialBufferFactor_ = spatialBufferFactor;
   }
 
+  /**
+   * Builds a queue containing only spatial-buffer tiles for the active layer.
+   * Used during user interaction so the active layer keeps loading smoothly
+   * while background and next-nav prefetch is paused.
+   */
+  buildActiveSpatialQueue(
+    map: Map,
+    activeLayer: PrefetchTileLayer,
+    categoryPriorities: Record<PrefetchCategoryKey, number>,
+    stats: PrefetchStats,
+  ): PrefetchTask[] {
+    const queue: PrefetchTask[] = [];
+    const seenTiles = new Set<string>();
+
+    const view = map.getView();
+    if (!view || !view.isDef()) {
+      return queue;
+    }
+
+    const mapSize = map.getSize();
+    if (!mapSize) {
+      return queue;
+    }
+
+    const viewState = view.getState();
+    const viewExtent = getForViewAndSize(
+      viewState.center,
+      viewState.resolution,
+      viewState.rotation,
+      mapSize,
+    );
+
+    const zoom = view.getZoom();
+    if (zoom === undefined) {
+      return queue;
+    }
+    const z = Math.round(zoom);
+    const projection = view.getProjection();
+    const pixelRatio =
+      (map as unknown as {getPixelRatio?: () => number}).getPixelRatio?.() ?? 1;
+
+    const ctx: PrefetchPlannerContext = {queue, seenTiles, pixelRatio, stats};
+
+    this.enqueueSpatialBuffer_(
+      ctx,
+      activeLayer,
+      viewExtent,
+      z,
+      projection,
+      categoryPriorities[PrefetchCategory.SPATIAL_ACTIVE],
+      PrefetchCategory.SPATIAL_ACTIVE,
+    );
+
+    queue.sort((a, b) => a.priority - b.priority);
+    return queue;
+  }
+
   buildQueue(
     map: Map,
     activeLayer: PrefetchTileLayer | null,

@@ -2,7 +2,6 @@ import OLMap from 'ol/Map.js';
 import View from 'ol/View.js';
 import TileLayer from 'ol/layer/Tile.js';
 import XYZ from 'ol/source/XYZ.js';
-import OSM from 'ol/source/OSM.js';
 import {fromLonLat} from 'ol/proj.js';
 import PrefetchManager, {PrefetchCategory} from 'openlayers-prefetching';
 
@@ -88,11 +87,6 @@ let prefetchManager = null;
 // Map (main)
 // -----------------------------------------------------------------------------
 
-const basemap = new TileLayer({
-  source: new OSM(),
-  opacity: 0.25,
-  properties: {name: 'OSM basemap'},
-});
 
 const initialCenter = fromLonLat([35.05, 48.46]); // Dnipro
 const mainView = new View({
@@ -104,9 +98,9 @@ const mainView = new View({
 
 const mainMap = new OLMap({
   target: 'main-map',
-  layers: [basemap],
+  layers: [],
   view: mainView,
-});
+});4
 
 // -----------------------------------------------------------------------------
 // Helpers
@@ -940,13 +934,10 @@ function init() {
     goToBtn.addEventListener('click', () => {
       const next = getNextTarget();
       if (!next) return;
-  log(`Navigating to ${next.name}...`, 'info');
+      log(`Jumped to ${next.name}`, 'info');
       const center = fromLonLat([next.lon, next.lat]);
-      mainView.animate({
-        center,
-        zoom: NEXT_NAV_ZOOM,
-        duration: 1500,
-      });
+      mainView.setCenter(center);
+      mainView.setZoom(NEXT_NAV_ZOOM);
       nextTargetIndex = (nextTargetIndex + 1) % navTargets.length;
       preloadNextTarget();
     });

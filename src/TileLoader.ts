@@ -74,6 +74,11 @@ class TileLoader {
     stats.recordLoadingStart(category);
 
     const taskId = task.id;
+    const layerName = task.layer.get('name') || task.layer.get('label') || 'unknown';
+    (tile as unknown as {__prefetchCategory?: string; __prefetchLayer?: string})
+      .__prefetchCategory = task.category;
+    (tile as unknown as {__prefetchCategory?: string; __prefetchLayer?: string})
+      .__prefetchLayer = layerName;
 
   const onTileChange: Listener = () => {
       const newState = tile.getState();
@@ -121,6 +126,21 @@ class TileLoader {
       stats.recordLoadingEnd(entry.task.category);
     }
     this.loading_.clear();
+  }
+
+  /**
+   * Abandon all in-flight tasks except those belonging to the given layer.
+   * Used to keep active-layer spatial loads running during user interaction.
+   */
+  abandonNonActive(activeLayer: import('ol/layer/BaseTile.js').default<any, any> | null, stats: PrefetchStats): void {
+    for (const [id, entry] of this.loading_) {
+      if (activeLayer && entry.task.layer === activeLayer) {
+        continue;
+      }
+      entry.unlisten();
+      stats.recordLoadingEnd(entry.task.category);
+      this.loading_.delete(id);
+    }
   }
 
   private buildErrorEntry_(task: PrefetchTask, tile: Tile): PrefetchError {

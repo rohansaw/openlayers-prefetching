@@ -32,3 +32,5 @@ coverage/
 # Misc
 .env
 .env.local
+
+test-results/

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prefetch Ordering Test</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.0.0/ol.css">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    #map { width: 400px; height: 300px; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "ol/": "https://cdn.jsdelivr.net/npm/ol@8.0.0/",
+        "openlayers-prefetching": "/dist/PrefetchManager.esm.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="map"></div>
+  <script type="module">
+    import Map from 'ol/Map.js';
+    import View from 'ol/View.js';
+    import TileLayer from 'ol/layer/Tile.js';
+    import XYZ from 'ol/source/XYZ.js';
+    import {fromLonLat} from 'ol/proj.js';
+    import PrefetchManager, {PrefetchCategory} from 'openlayers-prefetching';
+
+    // Parse test config from query string. Playwright passes a JSON blob via ?cfg=...
+    const params = new URLSearchParams(location.search);
+    const cfg = params.has('cfg') ? JSON.parse(decodeURIComponent(params.get('cfg'))) : {};
+
+    const dataUri =
+      'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+    const createSource = (label) => new XYZ({
+      url: `/tile-placeholder/${label}/{z}/{x}/{y}.png`,
+      crossOrigin: 'anonymous',
+      tileLoadFunction: (tile, _src) => {
+        const category = tile.__prefetchCategory || 'unknown';
+        const layerName = tile.__prefetchLayer || label;
+        fetch(`/tile-log?category=${encodeURIComponent(category)}&layer=${encodeURIComponent(layerName)}`)
+          .catch(() => {});
+        const img = tile.getImage();
+        img.src = dataUri;
+      },
+    });
+
+    // Build layers from cfg.layers array: [{name, active, bgPriority}]
+    // Default: one active layer + one background layer.
+    const layerDefs = cfg.layers ?? [
+      {name: 'active',     active: true},
+      {name: 'background', bgPriority: 5},
+    ];
+
+    const layers = layerDefs.map((def) => new TileLayer({
+      source: createSource(def.name),
+      visible: def.active ? true : false,
+      properties: {name: `${def.name}-layer`, label: `${def.name}-layer`},
+    }));
+
+    const view = new View({
+      center: fromLonLat(cfg.center ?? [13.4, 52.5]),
+      zoom: cfg.zoom ?? 4,
+      maxZoom: cfg.maxZoom ?? 7,
+    });
+
+    const map = new Map({target: 'map', layers, view});
+
+    // Exposed so Playwright can drive the map (pan, zoom).
+    window.__map = map;
+    window.__manager = null;
+    window.__ready = false;
+
+    map.once('rendercomplete', () => {
+      const manager = new PrefetchManager({
+        map,
+        maxConcurrentPrefetches: cfg.maxConcurrent ?? 6,
+        spatialBufferFactor: cfg.spatialBufferFactor ?? 1.2,
+        idleDelay: cfg.idleDelay ?? 0,
+        tickInterval: cfg.tickInterval ?? 30,
+        enabled: true,
+      });
+
+      const activeDef = layerDefs.find((d) => d.active);
+      if (activeDef) {
+        manager.setActiveLayer(layers[layerDefs.indexOf(activeDef)]);
+      }
+
+      layerDefs.forEach((def, i) => {
+        if (def.bgPriority !== undefined) {
+          manager.addBackgroundLayer(layers[i], def.bgPriority);
+        }
+      });
+
+      if (cfg.nextTarget) {
+        manager.setNextTarget(fromLonLat(cfg.nextTarget.center), cfg.nextTarget.zoom);
+      }
+
+      if (cfg.categoryPriorities) {
+        manager.setCategoryPriorities(cfg.categoryPriorities);
+      }
+
+      window.__manager = manager;
+      window.__ready = true;
+    });
+  </script>
+</body>
+</html>

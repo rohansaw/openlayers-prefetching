@@ -67,4 +67,10 @@ export interface PrefetchManagerOptions {
   idleDelay?: number;
   tickInterval?: number;
   enabled?: boolean;
+  /**
+   * When true (default), spatial tiles for the active layer continue loading
+   * during pan and zoom so newly revealed tiles appear without delay.
+   * Background and next-navigation prefetch is still paused during interaction.
+   */
+  loadActiveDuringInteraction?: boolean;
 }

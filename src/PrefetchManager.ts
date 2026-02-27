@@ -38,6 +38,7 @@ class PrefetchManager {
   private maxConcurrentPrefetches_: number;
   private idleDelay_: number;
   private enabled_: boolean;
+  private loadActiveDuringInteraction_: boolean;
   private userInteracting_ = false;
   private idleTimeout_: ReturnType<typeof setTimeout> | null = null;
 
@@ -59,15 +60,16 @@ class PrefetchManager {
 
   constructor(options: PrefetchManagerOptions) {
     this.map_ = options.map;
-    this.maxConcurrentPrefetches_ = options.maxConcurrentPrefetches ?? 12;
+    this.maxConcurrentPrefetches_ = options.maxConcurrentPrefetches ?? 16;
     this.idleDelay_ = options.idleDelay ?? 300;
     this.enabled_ = options.enabled ?? true;
+    this.loadActiveDuringInteraction_ = options.loadActiveDuringInteraction ?? true;
 
     this.planner_ = new PrefetchPlanner(options.spatialBufferFactor ?? 1.5);
 
     this.loader_ = new TileLoader({
       onSlotFreed: () => {
-        if (!this.userInteracting_) {
+        if (!this.userInteracting_ || this.loadActiveDuringInteraction_) {
           this.fillSlots_();
         }
       },
@@ -98,12 +100,26 @@ class PrefetchManager {
       clearTimeout(this.idleTimeout_);
       this.idleTimeout_ = null;
     }
-    this.loader_.abandonAll(this.stats_);
-    this.queue_ = this.queue_.filter(
-      (task) =>
-        task.category === PrefetchCategory.NEXT_NAV_ACTIVE ||
-        task.category === PrefetchCategory.NEXT_NAV_BACKGROUND,
-    );
+
+    if (this.loadActiveDuringInteraction_) {
+      // Drop background / next-nav in-flight loads but keep active-layer ones.
+      this.loader_.abandonNonActive(this.activeLayer_, this.stats_);
+      // Keep only active-layer spatial tasks and next-nav tasks in the queue.
+      this.queue_ = this.queue_.filter(
+        (task) =>
+          (task.category === PrefetchCategory.SPATIAL_ACTIVE && task.layer === this.activeLayer_) ||
+          task.category === PrefetchCategory.NEXT_NAV_ACTIVE ||
+          task.category === PrefetchCategory.NEXT_NAV_BACKGROUND,
+      );
+    } else {
+      this.loader_.abandonAll(this.stats_);
+      this.queue_ = this.queue_.filter(
+        (task) =>
+          task.category === PrefetchCategory.NEXT_NAV_ACTIVE ||
+          task.category === PrefetchCategory.NEXT_NAV_BACKGROUND,
+      );
+    }
+
     this.stats_.resetQueuedCounts();
     for (const task of this.queue_) {
       this.stats_.recordQueued(task.category);
@@ -125,13 +141,35 @@ class PrefetchManager {
   }
 
   private onPostRender_(): void {
-    if (!this.userInteracting_ && this.enabled_) {
+    if (!this.enabled_) {
+      return;
+    }
+    if (!this.userInteracting_ || this.loadActiveDuringInteraction_) {
       this.scheduler_.scheduleTick();
     }
   }
 
   private rebuildQueue_(): void {
+    // During interaction, only rebuild the active-layer spatial portion of the queue.
     if (this.userInteracting_) {
+      if (!this.loadActiveDuringInteraction_ || !this.activeLayer_) {
+        return;
+      }
+      const activeSpatial = this.planner_.buildActiveSpatialQueue(
+        this.map_,
+        this.activeLayer_,
+        this.categoryPriorities_,
+        this.stats_,
+      );
+      // Merge: keep existing next-nav entries, replace spatial ones.
+      const nextNavTasks = this.queue_.filter(
+        (t) =>
+          t.category === PrefetchCategory.NEXT_NAV_ACTIVE ||
+          t.category === PrefetchCategory.NEXT_NAV_BACKGROUND,
+      );
+      this.queue_ = [...activeSpatial, ...nextNavTasks];
+      this.queue_.sort((a, b) => a.priority - b.priority);
+      this.notifyStats_();
       return;
     }
     this.queue_ = this.planner_.buildQueue(
@@ -146,7 +184,17 @@ class PrefetchManager {
   }
 
   private fillSlots_(): void {
-    if (!this.enabled_ || this.userInteracting_) {
+    if (!this.enabled_) {
+      return;
+    }
+
+    // During interaction, only allow active-layer spatial tasks through.
+    const interactionFilter = this.userInteracting_ && this.loadActiveDuringInteraction_
+      ? (task: PrefetchTask) =>
+          task.category === PrefetchCategory.SPATIAL_ACTIVE && task.layer === this.activeLayer_
+      : null;
+
+    if (this.userInteracting_ && !interactionFilter) {
       return;
     }
 
@@ -161,14 +209,23 @@ class PrefetchManager {
       this.loader_.activeCount < this.maxConcurrentPrefetches_ &&
       this.queue_.length > 0
     ) {
-      if (this.userInteracting_) {
-        break;
-      }
       if (mapTileQueue && mapTileQueue.getTilesLoading() > 0) {
         this.scheduler_.scheduleTick();
         break;
       }
-      const task = this.queue_.shift();
+
+      // Find the next eligible task (respecting interaction filter).
+      let taskIndex = -1;
+      if (interactionFilter) {
+        taskIndex = this.queue_.findIndex(interactionFilter);
+        if (taskIndex === -1) {
+          break;
+        }
+      } else {
+        taskIndex = 0;
+      }
+
+      const task = this.queue_.splice(taskIndex, 1)[0];
       if (!task) {
         break;
       }
