@@ -6,14 +6,14 @@ Prefetching Manager for OpenLayers - An extension to optimize tile loading and i
 
 This extension provides customizable prefetching of tiles. Multiple common prefecthing scenarios are covered:
 
-- Spatial: Prefetch tiles outside of current viewport
-- Layers: Prefetch layers that are not yet visible with the same viewport as from the current active layer
-- Next-Location: Sometimes the locations where to navigate to next are already known. We can preload tiles for these.
+- **Spatial Prefetching**: Prefetch neighbouring tiles outside of current viewport, to facilitate panning.
+- **Layers Prefetching**: Prefetch layers that are not yet visible (i.e background / stacked layers) with the same viewport as the current active layer.
+- **Next-Location**: Sometimes the locations where to navigate to next can be anticipated. We can preload tiles for these.
 
-We allow assigning priorities on what to prefetch first:
+We allow assigning **priorities** on what to prefetch first:
 
-- Spatial/Background/Next/NextBackground
-- Per Layer priorities: Some layers might typically be neded before others, so priorities per layer allow customizing this.
+- **Prefetching-Type Prioritization** Spatial / Background / Next-Location / Next-Location-Background
+- **Per Layer priorities**: Some layers might typically be neded before others. Priorities per layer allow customizing this.
 
 ## Installation
 
@@ -21,7 +21,7 @@ We allow assigning priorities on what to prefetch first:
 npm install openlayers-prefetching
 ```
 
-## Examples
+## Usage & Examples
 
 **Hosted Demo**
 https://rohansaw.github.io/openlayers-prefetching/examples/advanced/advanced.html
@@ -34,7 +34,7 @@ We provide an example that allows a user to visualize Timeseries of Sentinel-2 I
 [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a).
 The timeseries of imagery is preloaded before the user navigates to the corresponding layers.
 
-To run the examples locally:
+To run the examples locally, you will have to point the package name to the local dist build insteaf of the `unpkg` link in `examples/advanced.html`. Then run:
 
 ```bash
 npm run build && npm run serve
