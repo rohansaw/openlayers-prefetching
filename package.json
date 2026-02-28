@@ -1,6 +1,6 @@
 {
   "name": "openlayers-prefetching",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Prefetching Manager for OpenLayers - An extension to optimize tile loading",
   "main": "dist/PrefetchManager.js",
   "module": "dist/PrefetchManager.esm.js",
