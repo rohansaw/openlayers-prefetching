@@ -65,12 +65,12 @@ const buildQueue = (categoryPriorities: Record<string, number>) => {
     { layer: bgLayerHigh, priority: 10 },
   ];
 
-  const nextTarget = { center: [100, 100] as [number, number], zoom: 5 };
+  const nextTargets = [{ center: [100, 100] as [number, number], zoom: 5 }];
   const queue = planner.buildQueue(
     createMap() as any,
     activeLayer as any,
     backgroundLayers as any,
-    nextTarget as any,
+    nextTargets as any,
     categoryPriorities as any,
     stats,
   );

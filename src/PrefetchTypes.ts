@@ -55,7 +55,7 @@ export interface PrefetchStats {
   bgBuffer: PrefetchCategoryStats;
   nextNavActive: PrefetchCategoryStats;
   nextNavBackground: PrefetchCategoryStats;
-  nextTarget: { center: Coordinate; zoom: number } | null;
+  nextTargets: { center: Coordinate; zoom: number }[];
   recentErrors: PrefetchError[];
   categoryPriorities: Record<PrefetchCategoryKey, number>;
 }
@@ -73,4 +73,10 @@ export interface PrefetchManagerOptions {
    * Background and next-navigation prefetch is still paused during interaction.
    */
   loadActiveDuringInteraction?: boolean;
+  /**
+   * Layers that should never be prefetched (neither as the active layer nor as
+   * background layers).  Can also be changed at runtime via
+   * `excludeLayer` / `includeLayer`.
+   */
+  excludedLayers?: PrefetchTileLayer[];
 }

@@ -106,7 +106,7 @@ class PrefetchStats {
     queueLength: number,
     loadingSize: number,
     paused: boolean,
-    nextTarget: PrefetchTarget | null,
+    nextTargets: PrefetchTarget[],
     categoryPriorities: Record<PrefetchCategoryKey, number>,
   ): PrefetchStatsSnapshot {
     return {
@@ -124,9 +124,7 @@ class PrefetchStats {
       nextNavBackground: {
         ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_BACKGROUND],
       },
-      nextTarget: nextTarget
-        ? { center: nextTarget.center, zoom: nextTarget.zoom }
-        : null,
+      nextTargets: nextTargets.map((t) => ({ center: t.center, zoom: t.zoom })),
       recentErrors: this.errorLog_.slice(),
       categoryPriorities: { ...categoryPriorities },
     };

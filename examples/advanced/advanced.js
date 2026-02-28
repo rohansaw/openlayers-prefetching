@@ -15,6 +15,8 @@ const VISUALIZATION = {
 };
 
 const NEXT_NAV_ZOOM = 12;
+// Number of upcoming navigation targets to prefetch simultaneously.
+const NUM_PREFETCH_TARGETS = 3;
 
 // Campaign area bbox (lon/lat) - Europe
 const CAMPAIGN_BBOX = [-25.0, 34.0, 45.0, 72.0];
@@ -158,9 +160,14 @@ function renderNavTargets() {
     const item = document.createElement('div');
     item.className = 'nav-item';
     item.textContent = `${idx + 1}. ${target.name}`;
-    if (idx === nextTargetIndex) {
+    const offset = (idx - nextTargetIndex + navTargets.length) % navTargets.length;
+    if (offset < NUM_PREFETCH_TARGETS) {
       item.classList.add('nav-next');
-      item.textContent += ' (next)';
+      if (offset === 0) {
+        item.textContent += ' (next)';
+      } else {
+        item.textContent += ` (prefetching +${offset})`;
+      }
     }
     container.appendChild(item);
   });
@@ -172,10 +179,13 @@ function getNextTarget() {
 }
 
 function preloadNextTarget() {
-  const next = getNextTarget();
-  if (!next || !prefetchManager) return;
-  const center = fromLonLat([next.lon, next.lat]);
-  prefetchManager.setNextTarget(center, NEXT_NAV_ZOOM);
+  if (!prefetchManager || navTargets.length === 0) return;
+  const targets = [];
+  for (let i = 0; i < NUM_PREFETCH_TARGETS; i++) {
+    const t = navTargets[(nextTargetIndex + i) % navTargets.length];
+    targets.push({ center: fromLonLat([t.lon, t.lat]), zoom: NEXT_NAV_ZOOM });
+  }
+  prefetchManager.setNextTargets(targets);
   renderNavTargets();
 }
 
@@ -650,10 +660,14 @@ function updateStatsUI(stats) {
   const targetBox = document.getElementById('next-target-info');
   const targetDetail = document.getElementById('next-target-detail');
   if (targetBox && targetDetail) {
-    if (stats.nextTarget) {
+    if (stats.nextTargets && stats.nextTargets.length > 0) {
       targetBox.style.display = 'block';
-      const c = stats.nextTarget.center;
-      targetDetail.textContent = `zoom ${stats.nextTarget.zoom} @ [${c[0].toFixed(0)}, ${c[1].toFixed(0)}]`;
+      targetDetail.textContent = stats.nextTargets
+        .map((t, i) => {
+          const c = t.center;
+          return `#${i + 1}: zoom ${t.zoom} @ [${c[0].toFixed(0)}, ${c[1].toFixed(0)}]`;
+        })
+        .join(' | ');
     } else {
       targetBox.style.display = 'none';
     }

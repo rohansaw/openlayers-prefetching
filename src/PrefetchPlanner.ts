@@ -35,7 +35,7 @@ interface PrefetchPlannerContext {
  */
 class PrefetchPlanner {
   private spatialBufferFactor_: number;
-  private lastNextTargetKey_: string | null = null;
+  private lastNextTargetsKey_: string | null = null;
 
   /**
    * @param spatialBufferFactor Factor to expand viewport for spatial prefetch.
@@ -105,17 +105,19 @@ class PrefetchPlanner {
     map: Map,
     activeLayer: PrefetchTileLayer | null,
     backgroundLayers: BackgroundLayerEntry[],
-    nextTarget: PrefetchTarget | null,
+    nextTargets: PrefetchTarget[],
     categoryPriorities: Record<PrefetchCategoryKey, number>,
     stats: PrefetchStats,
   ): PrefetchTask[] {
     const queue: PrefetchTask[] = [];
     const seenTiles = new Set<string>();
 
-    const nextTargetKey = nextTarget
-      ? `${nextTarget.center[0]}|${nextTarget.center[1]}|${nextTarget.zoom}`
-      : null;
-    const preserveNextCounts = nextTargetKey && nextTargetKey === this.lastNextTargetKey_;
+    const nextTargetsKey =
+      nextTargets.length > 0
+        ? nextTargets.map((t) => `${t.center[0]}|${t.center[1]}|${t.zoom}`).join(';')
+        : null;
+    const preserveNextCounts =
+      nextTargetsKey !== null && nextTargetsKey === this.lastNextTargetsKey_;
     const prevNextNavActive = preserveNextCounts
       ? stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued
       : 0;
@@ -170,7 +172,7 @@ class PrefetchPlanner {
       if (entry.layer === activeLayer) {
         continue;
       }
-      const subPriority = entry.priority * 0.001; // small factor to ensure background layers are ordered by their priority setting
+      const subPriority = entry.priority * 0.001;
       this.enqueueViewportTiles_(
         ctx,
         entry.layer,
@@ -182,8 +184,11 @@ class PrefetchPlanner {
       );
     }
 
-    if (nextTarget) {
-      this.lastNextTargetKey_ = nextTargetKey;
+    // Enqueue each next target in order. Later targets get a small priority
+    // offset so target[0] tiles are always loaded before target[1], etc.
+    for (let i = 0; i < nextTargets.length; i++) {
+      const nextTarget = nextTargets[i];
+      const targetOffset = i * 0.1;
       const nextZ = Math.round(nextTarget.zoom);
       const nextResolution = view.getResolutionForZoom(nextTarget.zoom);
       const nextExtent = getForViewAndSize(nextTarget.center, nextResolution, 0, mapSize);
@@ -195,7 +200,7 @@ class PrefetchPlanner {
           nextExtent,
           nextZ,
           projection,
-          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE],
+          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE] + targetOffset,
           PrefetchCategory.NEXT_NAV_ACTIVE,
         );
         this.enqueueSpatialBuffer_(
@@ -204,7 +209,7 @@ class PrefetchPlanner {
           nextExtent,
           nextZ,
           projection,
-          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE],
+          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE] + targetOffset,
           PrefetchCategory.NEXT_NAV_ACTIVE,
         );
       }
@@ -220,20 +225,28 @@ class PrefetchPlanner {
           nextExtent,
           nextZ,
           projection,
-          categoryPriorities[PrefetchCategory.NEXT_NAV_BACKGROUND] + subPriority,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_BACKGROUND] +
+            targetOffset +
+            subPriority,
           PrefetchCategory.NEXT_NAV_BACKGROUND,
         );
       }
     }
 
-    if (!nextTarget) {
-      this.lastNextTargetKey_ = null;
-    } else if (preserveNextCounts) {
-      if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued === 0) {
-        stats.setQueuedCount(PrefetchCategory.NEXT_NAV_ACTIVE, prevNextNavActive);
-      }
-      if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_BACKGROUND].queued === 0) {
-        stats.setQueuedCount(PrefetchCategory.NEXT_NAV_BACKGROUND, prevNextNavBackground);
+    if (nextTargets.length === 0) {
+      this.lastNextTargetsKey_ = null;
+    } else {
+      this.lastNextTargetsKey_ = nextTargetsKey;
+      if (preserveNextCounts) {
+        if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued === 0) {
+          stats.setQueuedCount(PrefetchCategory.NEXT_NAV_ACTIVE, prevNextNavActive);
+        }
+        if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_BACKGROUND].queued === 0) {
+          stats.setQueuedCount(
+            PrefetchCategory.NEXT_NAV_BACKGROUND,
+            prevNextNavBackground,
+          );
+        }
       }
     }
 

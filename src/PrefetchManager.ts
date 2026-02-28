@@ -44,7 +44,8 @@ class PrefetchManager {
 
   private backgroundLayers_: BackgroundLayerEntry[] = [];
   private activeLayer_: PrefetchTileLayer | null = null;
-  private nextTarget_: PrefetchTarget | null = null;
+  private nextTargets_: PrefetchTarget[] = [];
+  private excludedLayers_: Set<PrefetchTileLayer> = new Set();
   private categoryPriorities_: Record<PrefetchCategoryKey, number> = {
     ...DEFAULT_CATEGORY_PRIORITIES,
   };
@@ -64,6 +65,9 @@ class PrefetchManager {
     this.idleDelay_ = options.idleDelay ?? 80;
     this.enabled_ = options.enabled ?? true;
     this.loadActiveDuringInteraction_ = options.loadActiveDuringInteraction ?? true;
+    if (options.excludedLayers) {
+      this.excludedLayers_ = new Set(options.excludedLayers);
+    }
 
     this.planner_ = new PrefetchPlanner(options.spatialBufferFactor ?? 1.5);
 
@@ -153,7 +157,11 @@ class PrefetchManager {
   private rebuildQueue_(): void {
     // During interaction, only rebuild the active-layer spatial portion of the queue.
     if (this.userInteracting_) {
-      if (!this.loadActiveDuringInteraction_ || !this.activeLayer_) {
+      if (
+        !this.loadActiveDuringInteraction_ ||
+        !this.activeLayer_ ||
+        this.excludedLayers_.has(this.activeLayer_)
+      ) {
         return;
       }
       const activeSpatial = this.planner_.buildActiveSpatialQueue(
@@ -173,11 +181,21 @@ class PrefetchManager {
       this.notifyStats_();
       return;
     }
+
+    // Exclude layers from all planner inputs.
+    const effectiveActiveLayer =
+      this.activeLayer_ && !this.excludedLayers_.has(this.activeLayer_)
+        ? this.activeLayer_
+        : null;
+    const effectiveBackgroundLayers = this.backgroundLayers_.filter(
+      (e) => !this.excludedLayers_.has(e.layer),
+    );
+
     this.queue_ = this.planner_.buildQueue(
       this.map_,
-      this.activeLayer_,
-      this.backgroundLayers_,
-      this.nextTarget_,
+      effectiveActiveLayer,
+      effectiveBackgroundLayers,
+      this.nextTargets_,
       this.categoryPriorities_,
       this.stats_,
     );
@@ -252,7 +270,7 @@ class PrefetchManager {
       this.queue_.length,
       this.loader_.activeCount,
       this.userInteracting_,
-      this.nextTarget_,
+      this.nextTargets_,
       this.categoryPriorities_,
     );
     this.stats_.notify(snapshot);
@@ -296,14 +314,103 @@ class PrefetchManager {
     this.scheduler_.scheduleTick();
   }
 
-  setNextTarget(center: Coordinate, zoom: number): void {
-    this.nextTarget_ = { center, zoom };
+  /**
+   * Exclude a layer from all prefetching.  If the layer is currently the
+   * active layer its spatial prefetch will stop; if it is a background layer
+   * its background-viewport/buffer prefetch will stop.  The layer is NOT
+   * removed from the background-layers registry — re-including it restores
+   * prefetch without needing to re-add it.
+   */
+  excludeLayer(layer: PrefetchTileLayer): void {
+    if (!this.excludedLayers_.has(layer)) {
+      this.excludedLayers_.add(layer);
+      this.rebuildQueue_();
+      this.scheduler_.scheduleTick();
+    }
+  }
+
+  /**
+   * Re-enable prefetching for a previously excluded layer.
+   */
+  includeLayer(layer: PrefetchTileLayer): void {
+    if (this.excludedLayers_.has(layer)) {
+      this.excludedLayers_.delete(layer);
+      this.rebuildQueue_();
+      this.scheduler_.scheduleTick();
+    }
+  }
+
+  /**
+   * Returns true if the layer is currently excluded from prefetching.
+   */
+  isLayerExcluded(layer: PrefetchTileLayer): boolean {
+    return this.excludedLayers_.has(layer);
+  }
+
+  /**
+   * Returns a snapshot array of all currently excluded layers.
+   */
+  getExcludedLayers(): PrefetchTileLayer[] {
+    return Array.from(this.excludedLayers_);
+  }
+
+  /**
+   * Replace the entire list of next targets with the provided array.
+   */
+  setNextTargets(targets: Array<{ center: Coordinate; zoom: number }>): void {
+    this.nextTargets_ = targets.map((t) => ({ center: t.center, zoom: t.zoom }));
     this.rebuildQueue_();
     this.scheduler_.scheduleTick();
   }
 
+  /**
+   * Add a single target to the end of the next-targets list.
+   */
+  addNextTarget(center: Coordinate, zoom: number): void {
+    this.nextTargets_.push({ center, zoom });
+    this.rebuildQueue_();
+    this.scheduler_.scheduleTick();
+  }
+
+  /**
+   * Remove the next target at the given index.
+   */
+  removeNextTarget(index: number): void {
+    if (index >= 0 && index < this.nextTargets_.length) {
+      this.nextTargets_.splice(index, 1);
+      this.rebuildQueue_();
+      this.scheduler_.scheduleTick();
+    }
+  }
+
+  /**
+   * Clear all next targets.
+   */
+  clearNextTargets(): void {
+    this.nextTargets_ = [];
+    this.rebuildQueue_();
+    this.scheduler_.scheduleTick();
+  }
+
+  /**
+   * Return a copy of the current next-targets list.
+   */
+  getNextTargets(): PrefetchTarget[] {
+    return this.nextTargets_.map((t) => ({ center: t.center, zoom: t.zoom }));
+  }
+
+  /**
+   * Convenience: set a single next target (replaces any existing targets).
+   */
+  setNextTarget(center: Coordinate, zoom: number): void {
+    this.setNextTargets([{ center, zoom }]);
+  }
+
+  /**
+   * Convenience: clear all next targets (alias for clearNextTargets).
+   */
   clearNextTarget(): void {
-    this.nextTarget_ = null;
+    this.clearNextTargets();
   }
 
   setEnabled(enabled: boolean): void {
@@ -354,7 +461,7 @@ class PrefetchManager {
       this.queue_.length,
       this.loader_.activeCount,
       this.userInteracting_,
-      this.nextTarget_,
+      this.nextTargets_,
       this.categoryPriorities_,
     );
   }
@@ -376,7 +483,8 @@ class PrefetchManager {
     this.queue_ = [];
     this.backgroundLayers_ = [];
     this.activeLayer_ = null;
-    this.nextTarget_ = null;
+    this.nextTargets_ = [];
+    this.excludedLayers_.clear();
   }
 }
 
