@@ -41,7 +41,7 @@
   "author": "",
   "license": "MIT",
   "peerDependencies": {
-    "ol": "^7.0.0 || ^8.0.0"
+    "ol": "^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.41.2",

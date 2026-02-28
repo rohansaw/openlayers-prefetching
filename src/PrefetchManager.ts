@@ -193,8 +193,8 @@ class PrefetchManager {
     const interactionFilter =
       this.userInteracting_ && this.loadActiveDuringInteraction_
         ? (task: PrefetchTask) =>
-            task.category === PrefetchCategory.SPATIAL_ACTIVE &&
-            task.layer === this.activeLayer_
+          task.category === PrefetchCategory.SPATIAL_ACTIVE &&
+          task.layer === this.activeLayer_
         : null;
 
     if (this.userInteracting_ && !interactionFilter) {
