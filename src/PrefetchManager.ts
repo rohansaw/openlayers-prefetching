@@ -456,6 +456,19 @@ class PrefetchManager {
     this.stats_.onStats(callback);
   }
 
+  /**
+   * Register a one-shot callback that fires once the prefetch queue fully
+   * drains (`queued === 0 && loading === 0`).  Automatically removed after
+   * firing.
+   *
+   * @param callback  Invoked once when idle.
+   * @param maxWaitMs Safety timeout in ms (default 60 s) — fires the callback
+   *                  even if the queue never fully drains.
+   */
+  onIdle(callback: () => void, maxWaitMs = 60_000): void {
+    this.stats_.onIdle(callback, maxWaitMs);
+  }
+
   getStats(): import('./PrefetchTypes').PrefetchStats {
     return this.stats_.getSnapshot(
       this.queue_.length,

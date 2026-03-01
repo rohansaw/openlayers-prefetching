@@ -134,8 +134,43 @@ class PrefetchStats {
     this.listeners_.push(callback);
   }
 
+  /**
+   * Register a one-shot callback that fires as soon as `queued + loading === 0`
+   * (i.e. the prefetch engine has nothing left to do).  If it is already idle at
+   * the time of the call the callback fires on the very next `notify()` tick.
+   *
+   * @param callback  Called once, then automatically removed.
+   * @param maxWaitMs Optional safety timeout (default 60 s).  The callback is
+   *                  invoked even if the queue never fully drains (e.g. network
+   *                  errors keep some tiles from loading).
+   */
+  onIdle(callback: () => void, maxWaitMs = 60_000): void {
+    let fired = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const fire = () => {
+      if (fired) return;
+      fired = true;
+      if (timer !== null) { clearTimeout(timer); timer = null; }
+      // Remove this listener from the list
+      const idx = this.listeners_.indexOf(listener);
+      if (idx >= 0) this.listeners_.splice(idx, 1);
+      callback();
+    };
+
+    const listener = (stats: PrefetchStatsSnapshot) => {
+      if (stats.queued === 0 && stats.loading === 0) fire();
+    };
+
+    this.listeners_.push(listener);
+    timer = setTimeout(fire, maxWaitMs);
+  }
+
   notify(stats: PrefetchStatsSnapshot): void {
-    for (const cb of this.listeners_) {
+    // Snapshot the array before iterating — listeners may remove themselves
+    // (e.g. onIdle callbacks) during iteration.
+    const cbs = this.listeners_.slice();
+    for (const cb of cbs) {
       cb(stats);
     }
   }
