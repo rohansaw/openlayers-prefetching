@@ -308,6 +308,37 @@ class PrefetchManager {
     return this.backgroundLayers_.map((e) => ({ layer: e.layer, priority: e.priority }));
   }
 
+  /**
+   * Atomically replace the entire background layer list.
+   *
+   * Unlike calling removeBackgroundLayer/addBackgroundLayer in a loop (which
+   * triggers a rebuildQueue_() on every individual call), this method mutates
+   * backgroundLayers_ directly and calls rebuildQueue_() exactly once at the
+   * end.  Layers that are already registered with the same priority are left
+   * completely untouched — the planner sees no change for them and does not
+   * re-queue their tiles.
+   */
+  syncBackgroundLayers(entries: Array<{ layer: PrefetchTileLayer; priority: number }>): void {
+    const incoming = new Map<PrefetchTileLayer, number>(entries.map((e) => [e.layer, e.priority]));
+
+    // Remove layers no longer in the desired set.
+    this.backgroundLayers_ = this.backgroundLayers_.filter((e) => incoming.has(e.layer));
+
+    // Update priorities of existing entries + add new ones.
+    for (const [layer, priority] of incoming) {
+      const existing = this.backgroundLayers_.find((e) => e.layer === layer);
+      if (existing) {
+        existing.priority = priority;
+      } else {
+        this.backgroundLayers_.push({ layer, priority });
+      }
+    }
+
+    this.backgroundLayers_.sort((a, b) => a.priority - b.priority);
+    this.rebuildQueue_();
+    this.scheduler_.scheduleTick();
+  }
+
   setActiveLayer(layer: PrefetchTileLayer): void {
     this.activeLayer_ = layer;
     this.rebuildQueue_();
