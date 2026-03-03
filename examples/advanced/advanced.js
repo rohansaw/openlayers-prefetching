@@ -499,18 +499,7 @@ function switchLayer(index) {
 
   // Update PrefetchManager
   if (prefetchManager) {
-    prefetchManager.setActiveLayer(mainLayers[index]);
-
-    // Re-register background layers
-    const bgLayers = prefetchManager.getBackgroundLayers();
-    bgLayers.forEach((entry) => prefetchManager.removeBackgroundLayer(entry.layer));
-
-    let priority = 1;
-    mainLayers.forEach((layer, i) => {
-      if (i !== index) {
-        prefetchManager.addBackgroundLayer(layer, priority++);
-      }
-    });
+    prefetchManager.setActiveLayerIndex(index);
   }
 
   // Update main map label
@@ -542,7 +531,7 @@ function switchLayer(index) {
 const CAT_PRIO_ELEMENT_MAP = {
   'prio-spatial': PrefetchCategory.SPATIAL_ACTIVE,
   'prio-bg-viewport': PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT,
-  'prio-nav-current': PrefetchCategory.NEXT_NAV_ACTIVE,
+  'prio-nav-current': PrefetchCategory.NEXT_NAV_PRIMARY,
   'prio-nav-bg': PrefetchCategory.NEXT_NAV_BACKGROUND,
 };
 
@@ -583,16 +572,13 @@ function setupPrefetchManager() {
     enabled,
   });
 
-  // Active layer
-  prefetchManager.setActiveLayer(mainLayers[activeLayerIndex]);
+  // Register all layers - manager derives active vs background automatically
+  prefetchManager.setLayers(mainLayers, activeLayerIndex);
 
-  // Background layers
-  let priority = 1;
-  mainLayers.forEach((layer, i) => {
-    if (i !== activeLayerIndex) {
-      prefetchManager.addBackgroundLayer(layer, priority++);
-    }
-  });
+  // Fix the primary layer for next-nav prefetching to the initial active layer.
+  // This stays constant when the user switches layers - we always preload the
+  // "default" layer (index 0) at the next navigation target.
+  prefetchManager.setNextNavLayer(mainLayers[0]);
 
   prefetchManager.onStats(updateStatsUI);
   syncCategoryPriorityUI();
@@ -642,8 +628,8 @@ function updateStatsUI(stats) {
   document.getElementById('cat-bgvp-d').textContent = bv.loaded;
   document.getElementById('cat-bgvp-e').textContent = bv.errors;
 
-  const nc = stats.nextNavActive;
-  document.getElementById('cat-navact-p').textContent = cp.nextNavActive || '-';
+  const nc = stats.nextNavPrimary;
+  document.getElementById('cat-navact-p').textContent = cp.nextNavPrimary || '-';
   document.getElementById('cat-navact-q').textContent = nc.queued;
   document.getElementById('cat-navact-l').textContent = nc.loading;
   document.getElementById('cat-navact-d').textContent = nc.loaded;

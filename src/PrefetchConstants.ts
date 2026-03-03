@@ -7,7 +7,8 @@ export const PrefetchCategory = {
   SPATIAL_ACTIVE: 'spatial',
   BACKGROUND_LAYERS_VIEWPORT: 'bgViewport',
   BACKGROUND_LAYERS_BUFFER: 'bgBuffer',
-  NEXT_NAV_ACTIVE: 'nextNavActive',
+  /** Tiles at the next navigation target for the fixed primary layer (set via setNextNavLayer). */
+  NEXT_NAV_PRIMARY: 'nextNavPrimary',
   NEXT_NAV_BACKGROUND: 'nextNavBackground',
 } as const;
 
@@ -18,7 +19,7 @@ export const DEFAULT_CATEGORY_PRIORITIES: Record<PrefetchCategoryKey, number> = 
   [PrefetchCategory.SPATIAL_ACTIVE]: 1,
   [PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT]: 2,
   [PrefetchCategory.BACKGROUND_LAYERS_BUFFER]: 3,
-  [PrefetchCategory.NEXT_NAV_ACTIVE]: 4,
+  [PrefetchCategory.NEXT_NAV_PRIMARY]: 4,
   [PrefetchCategory.NEXT_NAV_BACKGROUND]: 5,
 };
 
@@ -30,8 +31,8 @@ export function getCategoryName(category: PrefetchCategoryKey | string): string 
       return 'BG viewport';
     case PrefetchCategory.BACKGROUND_LAYERS_BUFFER:
       return 'BG buffer';
-    case PrefetchCategory.NEXT_NAV_ACTIVE:
-      return 'Next nav (active)';
+    case PrefetchCategory.NEXT_NAV_PRIMARY:
+      return 'Next nav (primary layer)';
     case PrefetchCategory.NEXT_NAV_BACKGROUND:
       return 'Next nav (BG)';
     default:
@@ -57,7 +58,7 @@ export function createInitialCategoryCounts(): Record<
       loaded: 0,
       errors: 0,
     },
-    [PrefetchCategory.NEXT_NAV_ACTIVE]: { queued: 0, loading: 0, loaded: 0, errors: 0 },
+    [PrefetchCategory.NEXT_NAV_PRIMARY]: { queued: 0, loading: 0, loaded: 0, errors: 0 },
     [PrefetchCategory.NEXT_NAV_BACKGROUND]: {
       queued: 0,
       loading: 0,

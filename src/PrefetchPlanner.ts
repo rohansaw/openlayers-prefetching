@@ -101,10 +101,161 @@ class PrefetchPlanner {
     return queue;
   }
 
+  /**
+   * Builds tasks for the current viewport only: spatial buffer for the active
+   * layer and viewport tiles for all background layers.
+   * Next-nav tasks are NOT included - call buildNextNavQueue separately.
+   */
+  buildViewportQueue(
+    map: Map,
+    activeLayer: PrefetchTileLayer | null,
+    backgroundLayers: BackgroundLayerEntry[],
+    categoryPriorities: Record<PrefetchCategoryKey, number>,
+    stats: PrefetchStats,
+    seenTiles?: Set<string>,
+  ): PrefetchTask[] {
+    const queue: PrefetchTask[] = [];
+    const seen = seenTiles ?? new Set<string>();
+
+    const view = map.getView();
+    if (!view || !view.isDef()) return queue;
+    const mapSize = map.getSize();
+    if (!mapSize) return queue;
+
+    const viewState = view.getState();
+    const viewExtent = getForViewAndSize(
+      viewState.center,
+      viewState.resolution,
+      viewState.rotation,
+      mapSize,
+    );
+    const zoom = view.getZoom();
+    if (zoom === undefined) return queue;
+    const z = Math.round(zoom);
+    const projection = view.getProjection();
+    const pixelRatio =
+      (map as unknown as { getPixelRatio?: () => number }).getPixelRatio?.() ?? 1;
+
+    const ctx: PrefetchPlannerContext = { queue, seenTiles: seen, pixelRatio, stats };
+
+    if (activeLayer) {
+      this.enqueueSpatialBuffer_(
+        ctx,
+        activeLayer,
+        viewExtent,
+        z,
+        projection,
+        categoryPriorities[PrefetchCategory.SPATIAL_ACTIVE],
+        PrefetchCategory.SPATIAL_ACTIVE,
+      );
+    }
+
+    for (const entry of backgroundLayers) {
+      if (entry.layer === activeLayer) continue;
+      const subPriority = entry.priority * 0.001;
+      this.enqueueViewportTiles_(
+        ctx,
+        entry.layer,
+        viewExtent,
+        z,
+        projection,
+        categoryPriorities[PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT] + subPriority,
+        PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT,
+      );
+    }
+
+    queue.sort((a, b) => a.priority - b.priority);
+    return queue;
+  }
+
+  /**
+   * Builds tasks for all next-navigation targets: primary layer + background
+   * layers at each target location.
+   * Viewport tasks are NOT included - compose with buildViewportQueue.
+   *
+   * Tiles already LOADED or LOADING are skipped by enqueueTile_, so calling
+   * this after a layer switch or pan leaves already-fetched next-nav tiles
+   * untouched.
+   */
+  buildNextNavQueue(
+    map: Map,
+    backgroundLayers: BackgroundLayerEntry[],
+    nextNavLayer: PrefetchTileLayer | null,
+    nextTargets: PrefetchTarget[],
+    categoryPriorities: Record<PrefetchCategoryKey, number>,
+    stats: PrefetchStats,
+    seenTiles?: Set<string>,
+  ): PrefetchTask[] {
+    const queue: PrefetchTask[] = [];
+    const seen = seenTiles ?? new Set<string>();
+
+    if (!nextNavLayer && backgroundLayers.length === 0) return queue;
+    if (nextTargets.length === 0) return queue;
+
+    const view = map.getView();
+    if (!view || !view.isDef()) return queue;
+    const mapSize = map.getSize();
+    if (!mapSize) return queue;
+
+    const pixelRatio =
+      (map as unknown as { getPixelRatio?: () => number }).getPixelRatio?.() ?? 1;
+    const ctx: PrefetchPlannerContext = { queue, seenTiles: seen, pixelRatio, stats };
+
+    for (let i = 0; i < nextTargets.length; i++) {
+      const nextTarget = nextTargets[i];
+      const targetOffset = i * 0.1;
+      const nextZ = Math.round(nextTarget.zoom);
+      const nextResolution = view.getResolutionForZoom(nextTarget.zoom);
+      const nextExtent = getForViewAndSize(nextTarget.center, nextResolution, 0, mapSize);
+      const projection = view.getProjection();
+
+      if (nextNavLayer) {
+        this.enqueueViewportTiles_(
+          ctx,
+          nextNavLayer,
+          nextExtent,
+          nextZ,
+          projection,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_PRIMARY] + targetOffset,
+          PrefetchCategory.NEXT_NAV_PRIMARY,
+        );
+        this.enqueueSpatialBuffer_(
+          ctx,
+          nextNavLayer,
+          nextExtent,
+          nextZ,
+          projection,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_PRIMARY] + targetOffset,
+          PrefetchCategory.NEXT_NAV_PRIMARY,
+        );
+      }
+
+      for (const entry of backgroundLayers) {
+        if (entry.layer === nextNavLayer) continue;
+        const subPriority = entry.priority * 0.001;
+        this.enqueueViewportTiles_(
+          ctx,
+          entry.layer,
+          nextExtent,
+          nextZ,
+          projection,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_BACKGROUND] +
+            targetOffset +
+            subPriority,
+          PrefetchCategory.NEXT_NAV_BACKGROUND,
+        );
+      }
+    }
+
+    queue.sort((a, b) => a.priority - b.priority);
+    return queue;
+  }
+
   buildQueue(
     map: Map,
     activeLayer: PrefetchTileLayer | null,
     backgroundLayers: BackgroundLayerEntry[],
+    nextNavLayer: PrefetchTileLayer | null,
     nextTargets: PrefetchTarget[],
     categoryPriorities: Record<PrefetchCategoryKey, number>,
     stats: PrefetchStats,
@@ -118,8 +269,8 @@ class PrefetchPlanner {
         : null;
     const preserveNextCounts =
       nextTargetsKey !== null && nextTargetsKey === this.lastNextTargetsKey_;
-    const prevNextNavActive = preserveNextCounts
-      ? stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued
+    const prevNextNavPrimary = preserveNextCounts
+      ? stats.categoryCounts[PrefetchCategory.NEXT_NAV_PRIMARY].queued
       : 0;
     const prevNextNavBackground = preserveNextCounts
       ? stats.categoryCounts[PrefetchCategory.NEXT_NAV_BACKGROUND].queued
@@ -193,29 +344,30 @@ class PrefetchPlanner {
       const nextResolution = view.getResolutionForZoom(nextTarget.zoom);
       const nextExtent = getForViewAndSize(nextTarget.center, nextResolution, 0, mapSize);
 
-      if (activeLayer) {
+      // Primary layer: fixed, independent of which layer is currently active.
+      if (nextNavLayer) {
         this.enqueueViewportTiles_(
           ctx,
-          activeLayer,
+          nextNavLayer,
           nextExtent,
           nextZ,
           projection,
-          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE] + targetOffset,
-          PrefetchCategory.NEXT_NAV_ACTIVE,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_PRIMARY] + targetOffset,
+          PrefetchCategory.NEXT_NAV_PRIMARY,
         );
         this.enqueueSpatialBuffer_(
           ctx,
-          activeLayer,
+          nextNavLayer,
           nextExtent,
           nextZ,
           projection,
-          categoryPriorities[PrefetchCategory.NEXT_NAV_ACTIVE] + targetOffset,
-          PrefetchCategory.NEXT_NAV_ACTIVE,
+          categoryPriorities[PrefetchCategory.NEXT_NAV_PRIMARY] + targetOffset,
+          PrefetchCategory.NEXT_NAV_PRIMARY,
         );
       }
 
       for (const entry of backgroundLayers) {
-        if (entry.layer === activeLayer) {
+        if (entry.layer === activeLayer || entry.layer === nextNavLayer) {
           continue;
         }
         const subPriority = entry.priority * 0.001;
@@ -238,8 +390,8 @@ class PrefetchPlanner {
     } else {
       this.lastNextTargetsKey_ = nextTargetsKey;
       if (preserveNextCounts) {
-        if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_ACTIVE].queued === 0) {
-          stats.setQueuedCount(PrefetchCategory.NEXT_NAV_ACTIVE, prevNextNavActive);
+        if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_PRIMARY].queued === 0) {
+          stats.setQueuedCount(PrefetchCategory.NEXT_NAV_PRIMARY, prevNextNavPrimary);
         }
         if (stats.categoryCounts[PrefetchCategory.NEXT_NAV_BACKGROUND].queued === 0) {
           stats.setQueuedCount(
