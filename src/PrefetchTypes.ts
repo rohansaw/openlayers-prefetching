@@ -53,7 +53,7 @@ export interface PrefetchStats {
   spatialActive: PrefetchCategoryStats;
   bgViewport: PrefetchCategoryStats;
   bgBuffer: PrefetchCategoryStats;
-  nextNavActive: PrefetchCategoryStats;
+  nextNavPrimary: PrefetchCategoryStats;
   nextNavBackground: PrefetchCategoryStats;
   nextTargets: { center: Coordinate; zoom: number }[];
   recentErrors: PrefetchError[];

@@ -36,6 +36,31 @@ class PrefetchStats {
     }
   }
 
+  /** Reset only spatial + bg-viewport queued/loading counts. Next-nav counts are preserved. */
+  resetViewportCounts(): void {
+    const viewportCategories: PrefetchCategoryKey[] = [
+      PrefetchCategory.SPATIAL_ACTIVE,
+      PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT,
+      PrefetchCategory.BACKGROUND_LAYERS_BUFFER,
+    ];
+    for (const key of viewportCategories) {
+      this.categoryCounts_[key].queued = 0;
+      this.categoryCounts_[key].loading = 0;
+    }
+  }
+
+  /** Reset only next-nav queued/loading counts. Viewport counts are preserved. */
+  resetNextNavCounts(): void {
+    const nextNavCategories: PrefetchCategoryKey[] = [
+      PrefetchCategory.NEXT_NAV_PRIMARY,
+      PrefetchCategory.NEXT_NAV_BACKGROUND,
+    ];
+    for (const key of nextNavCategories) {
+      this.categoryCounts_[key].queued = 0;
+      this.categoryCounts_[key].loading = 0;
+    }
+  }
+
   recordQueued(category: PrefetchCategoryKey): void {
     if (this.categoryCounts_[category]) {
       this.categoryCounts_[category].queued++;
@@ -120,7 +145,7 @@ class PrefetchStats {
         ...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_VIEWPORT],
       },
       bgBuffer: { ...this.categoryCounts_[PrefetchCategory.BACKGROUND_LAYERS_BUFFER] },
-      nextNavActive: { ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_ACTIVE] },
+      nextNavPrimary: { ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_PRIMARY] },
       nextNavBackground: {
         ...this.categoryCounts_[PrefetchCategory.NEXT_NAV_BACKGROUND],
       },
@@ -167,7 +192,7 @@ class PrefetchStats {
   }
 
   notify(stats: PrefetchStatsSnapshot): void {
-    // Snapshot the array before iterating — listeners may remove themselves
+    // Snapshot the array before iterating - listeners may remove themselves
     // (e.g. onIdle callbacks) during iteration.
     const cbs = this.listeners_.slice();
     for (const cb of cbs) {

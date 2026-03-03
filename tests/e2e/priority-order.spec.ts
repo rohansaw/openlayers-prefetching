@@ -273,7 +273,7 @@ test('panning pauses prefetch and it resumes after the pan ends', async ({ page 
   await page.mouse.down();
   await page.mouse.move(cx + 80, cy + 40, { steps: 10 });
 
-  // During the drag, prefetch should be paused — snapshot the count
+  // During the drag, prefetch should be paused - snapshot the count
   const countDuringPan = log.length;
 
   await page.mouse.up();
